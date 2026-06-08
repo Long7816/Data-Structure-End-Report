@@ -377,27 +377,44 @@ function populateSelectors() {
   startSelect.innerHTML = "";
   endSelect.innerHTML = "";
 
-  // 篩選起點 (有 type === 'transit' 或 'dorm' 或 YouBike 站點)
+  // 創建起點的 optgroup
+  const startYoubikeGroup = document.createElement("optgroup");
+  startYoubikeGroup.label = "🚲 YouBike 站點";
+  
+  const startLandmarkGroup = document.createElement("optgroup");
+  startLandmarkGroup.label = "📍 重要地標";
+
   for (const nodeId in CAMPUS_NODES) {
     const node = CAMPUS_NODES[nodeId];
-    if (node.type === "transit" || node.type === "dorm" || node.isYouBike) {
+    if (node.isYouBike) {
       const opt = document.createElement("option");
       opt.value = node.id;
       opt.textContent = node.name;
-      startSelect.appendChild(opt);
+      startYoubikeGroup.appendChild(opt);
+    } else if (node.type === "transit" || node.type === "dorm") {
+      const opt = document.createElement("option");
+      opt.value = node.id;
+      opt.textContent = node.name;
+      startLandmarkGroup.appendChild(opt);
     }
   }
+  startSelect.appendChild(startYoubikeGroup);
+  startSelect.appendChild(startLandmarkGroup);
 
-  // 篩選終點 (大樓、圖書館或特定教室)
+  // 創建終點的 optgroup
+  const endBuildingGroup = document.createElement("optgroup");
+  endBuildingGroup.label = "🏫 教學大樓";
+
   for (const nodeId in CAMPUS_NODES) {
     const node = CAMPUS_NODES[nodeId];
     if (node.type === "building") {
       const opt = document.createElement("option");
       opt.value = node.id;
       opt.textContent = node.name;
-      endSelect.appendChild(opt);
+      endBuildingGroup.appendChild(opt);
     }
   }
+  endSelect.appendChild(endBuildingGroup);
 
   // 設定預設選取
   startSelect.value = startNodeId;
@@ -470,15 +487,37 @@ function ensureHybridOptions() {
   const startSelect = document.getElementById("start-select");
   const endSelect = document.getElementById("end-select");
 
-  // 暫時將所有節點塞入兩個選單，以支援雙向交換的靈活性
+  // 暫時將所有節點分組塞入兩個選單，以支援雙向交換與漂亮的分類結構
   [startSelect, endSelect].forEach(select => {
     select.innerHTML = "";
+    
+    const youbikeGroup = document.createElement("optgroup");
+    youbikeGroup.label = "🚲 YouBike 站點";
+    
+    const buildingGroup = document.createElement("optgroup");
+    buildingGroup.label = "🏫 教學大樓";
+    
+    const landmarkGroup = document.createElement("optgroup");
+    landmarkGroup.label = "📍 重要地標";
+    
     for (const id in CAMPUS_NODES) {
+      const node = CAMPUS_NODES[id];
       const opt = document.createElement("option");
       opt.value = id;
-      opt.textContent = CAMPUS_NODES[id].name;
-      select.appendChild(opt);
+      opt.textContent = node.name;
+      
+      if (node.isYouBike) {
+        youbikeGroup.appendChild(opt);
+      } else if (node.type === "building") {
+        buildingGroup.appendChild(opt);
+      } else {
+        landmarkGroup.appendChild(opt);
+      }
     }
+    
+    select.appendChild(youbikeGroup);
+    select.appendChild(buildingGroup);
+    select.appendChild(landmarkGroup);
   });
 }
 
