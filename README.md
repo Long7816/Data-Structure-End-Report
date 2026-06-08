@@ -25,6 +25,7 @@
 │   ├── campusGraph.js    # 校園地圖 Graph 節點與邊資料
 │   └── disasterScenario.js# 天氣與 YouBike 模擬設定資料
 ├── AGENTS.md             # 開發規格與規則檔
+├── PRD.md                # 產品需求文件
 ├── USER_STORY.md         # 用戶故事場景
 └── README.md             # 專案說明文件
 ```
