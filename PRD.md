@@ -5,7 +5,7 @@
 
 ## 2. 核心技術架構 (Tech Stack)
 * **前端技術**：純 HTML5, Vanilla CSS3, JavaScript (ES6+)。
-* **架構限制**：無後端伺服器、無資料庫、無登入系統、不使用 any NPM 套件與現代框架 (React/Vue/Next/Vite 等)。
+* **架構限制**：無後端伺服器、無資料庫、無登入系統、不使用任何 NPM 套件與現代框架 (React/Vue/Next/Vite 等)。
 * **地圖渲染**：使用 SVG 繪製節點與路網邊線，支援流光動畫與動態多邊形天候遮罩。
 * **部屬與執行**：使用者可直接點擊 `index.html` 離線執行。
 
