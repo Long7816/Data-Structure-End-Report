@@ -1,91 +1,95 @@
 /**
  * 幸福通勤導航 - 校園路網地圖資料
- * 包含起點、終點、YouBike站點以及路段邊資訊。
- * 由於不使用模組化打包工具，此檔案宣告全域變數以供 script.js 存取。
+ * 依照 Google 試算表（北科大校園與周邊景點真實經緯度投影）更新。
  */
 
 // 節點資料 (Nodes)
-// x, y 坐標用於 SVG 地圖渲染，範圍為 0 ~ 1000, 0 ~ 800
+// x, y 坐標由真實經緯度經 SVG 投影轉換 (對應 1000x800 畫布，留有邊距)
 const CAMPUS_NODES = {
-  // 起點/交通節點
-  "mrt_xinsheng": { id: "mrt_xinsheng", name: "捷運忠孝新生站", x: 100, y: 350, type: "transit" },
-  "gate": { id: "gate", name: "校門口", x: 250, y: 350, type: "transit" },
-  "dorm_female": { id: "dorm_female", name: "女宿", x: 100, y: 550, type: "dorm" },
-  "dorm_male": { id: "dorm_male", name: "男宿", x: 150, y: 680, type: "dorm" },
+  // 教學大樓與主要目的地 (building)
+  "building_science": { id: "building_science", name: "科研大樓", x: 446.2, y: 280.5, type: "building" },
+  "building_4th": { id: "building_4th", name: "第四教學大樓", x: 629.2, y: 376.0, type: "building" },
+  "building_3rd": { id: "building_3rd", name: "第三教學大樓", x: 500.0, y: 509.8, type: "building" },
+  "building_2nd": { id: "building_2nd", name: "第二教學大樓", x: 543.1, y: 433.3, type: "building" },
+  "building_1st": { id: "building_1st", name: "第一教學大樓", x: 543.1, y: 376.0, type: "building" },
+  "building_comprehensive": { id: "building_comprehensive", name: "綜合大樓", x: 640.0, y: 490.7, type: "building" },
+  "building_common": { id: "building_common", name: "共同科館", x: 693.8, y: 376.0, type: "building" },
+  "building_yiguang": { id: "building_yiguang", name: "億光大樓", x: 920.0, y: 662.7, type: "building" },
+  "building_pioneer": { id: "building_pioneer", name: "先鋒大樓", x: 704.6, y: 395.1, type: "building" },
+  "building_zhongzheng": { id: "building_zhongzheng", name: "中正館", x: 564.6, y: 548.0, type: "building" },
+  "building_red": { id: "building_red", name: "紅樓", x: 478.5, y: 356.9, type: "building" },
+  "building_admin": { id: "building_admin", name: "行政大樓", x: 480.6, y: 376.0, type: "building" }, // 真實經緯度 (121.53422, 25.0436) 修正偏位
+  "library": { id: "library", name: "圖書館", x: 424.6, y: 624.4, type: "building" },
 
-  // YouBike 站點
-  "youbike_mrt": { id: "youbike_mrt", name: "YouBike 捷運新生站", x: 120, y: 300, type: "youbike", isYouBike: true },
-  "youbike_gate": { id: "youbike_gate", name: "YouBike 校門口站", x: 280, y: 320, type: "youbike", isYouBike: true },
-  "youbike_dorm": { id: "youbike_dorm", name: "YouBike 宿舍站", x: 120, y: 600, type: "youbike", isYouBike: true },
-  "youbike_science": { id: "youbike_science", name: "YouBike 科研館站", x: 700, y: 380, type: "youbike", isYouBike: true },
-  "youbike_lib": { id: "youbike_lib", name: "YouBike 圖書館站", x: 500, y: 550, type: "youbike", isYouBike: true },
+  // 宿舍 (dorm)
+  "dorm_ntut": { id: "dorm_ntut", name: "北科宿舍", x: 758.5, y: 720.0, type: "dorm" },
 
-  // 中繼路口節點
-  "intersection_1": { id: "intersection_1", name: "椰林大道起點", x: 350, y: 350, type: "intersection" },
-  "intersection_2": { id: "intersection_2", name: "綜合大樓前廣場", x: 500, y: 250, type: "intersection" },
-  "intersection_3": { id: "intersection_3", name: "活大路口", x: 450, y: 450, type: "intersection" },
-  "intersection_4": { id: "intersection_4", name: "圖書館路口", x: 550, y: 480, type: "intersection" },
-  "intersection_5": { id: "intersection_5", name: "科研館旁通道", x: 740, y: 450, type: "intersection" },
-  "intersection_6": { id: "intersection_6", name: "宿舍聯外路口", x: 200, y: 500, type: "intersection" },
+  // 周邊地標 (transit / landmark)
+  "guanghua_market": { id: "guanghua_market", name: "光華商場", x: 237.2, y: 80.0, type: "transit" },
+  "syntrend": { id: "syntrend", name: "三創生活園區", x: 155.4, y: 261.4, type: "transit" },
+  "green_garden": { id: "green_garden", name: "綠光庭園", x: 435.4, y: 548.0, type: "transit" },
 
-  // 目的地/大樓
-  "building_science": { id: "building_science", name: "科研大樓", x: 820, y: 450, type: "building" },
-  "building_comprehensive": { id: "building_comprehensive", name: "綜合大樓", x: 530, y: 200, type: "building" },
-  "building_common": { id: "building_common", name: "共同教室", x: 620, y: 620, type: "building" },
-  "library": { id: "library", name: "總圖書館", x: 530, y: 580, type: "building" }
+  // YouBike 站點 (youbike)
+  "youbike_guanghua": { id: "youbike_guanghua", name: "youbike光華商場站", x: 220.0, y: 146.7, type: "youbike", isYouBike: true },
+  "youbike_ee": { id: "youbike_ee", name: "youbike北科大(電機工程系)", x: 726.2, y: 681.8, type: "youbike", isYouBike: true },
+  "youbike_xinsheng_4": { id: "youbike_xinsheng_4", name: "youbike忠孝新生站(4號出口)", x: 349.2, y: 624.4, type: "youbike", isYouBike: true },
+  "youbike_xinsheng_3": { id: "youbike_xinsheng_3", name: "youbike忠孝新生站(3號出口)", x: 435.4, y: 586.2, type: "youbike", isYouBike: true },
+  "youbike_xinsheng_1": { id: "youbike_xinsheng_1", name: "youbike忠孝新生站(1號出口)", x: 80.0, y: 471.6, type: "youbike", isYouBike: true },
+  "youbike_bade": { id: "youbike_bade", name: "youbike八德市場", x: 543.1, y: 127.6, type: "youbike", isYouBike: true }
 };
 
 // 邊資料 (Edges / Paths)
-// 包含物理距離與多種環境屬性：
+// 包含物理距離 (由坐標比例尺換算米) 與多種環境屬性：
 // - distance: 物理距離 (米)
-// - hasRoof: 是否有雨遮/騎樓 (可少淋雨)
-// - hasShade: 是否有樹蔭/遮蔽 (較涼爽)
+// - hasRoof: 是否有雨遮/連通道
+// - hasShade: 是否有樹蔭/遮蔽
 // - slope: 坡度等級 (1:平坦, 2:微坡, 3:陡坡或樓梯)
 // - surface: 路面材質 (asphalt:柏油, marble:大理石[雨天易滑], brick:紅磚)
 const CAMPUS_EDGES = [
-  // 捷運與校門口連接
-  { id: "e1", source: "mrt_xinsheng", target: "gate", distance: 150, hasRoof: false, hasShade: true, slope: 1, surface: "asphalt" },
-  { id: "e2", source: "mrt_xinsheng", target: "youbike_mrt", distance: 30, hasRoof: true, hasShade: false, slope: 1, surface: "brick" },
-  { id: "e3", source: "youbike_mrt", target: "gate", distance: 130, hasRoof: false, hasShade: true, slope: 1, surface: "asphalt" },
+  // 新生南路、三創、光華商場周邊 (外部道路，空污主幹道)
+  { id: "e1", source: "youbike_xinsheng_1", target: "syntrend", distance: 220, hasRoof: false, hasShade: false, slope: 1, surface: "asphalt" },
+  { id: "e2", source: "syntrend", target: "youbike_guanghua", distance: 130, hasRoof: false, hasShade: false, slope: 1, surface: "asphalt" },
+  { id: "e3", source: "youbike_guanghua", target: "guanghua_market", distance: 70, hasRoof: false, hasShade: false, slope: 1, surface: "brick" },
+  { id: "e4", source: "youbike_guanghua", target: "youbike_bade", distance: 320, hasRoof: false, hasShade: false, slope: 1, surface: "asphalt" },
+  { id: "e23", source: "youbike_xinsheng_4", target: "youbike_xinsheng_1", distance: 310, hasRoof: false, hasShade: true, slope: 1, surface: "asphalt" },
 
-  // 校門口與椰林大道、YouBike 門口站
-  { id: "e4", source: "gate", target: "youbike_gate", distance: 40, hasRoof: false, hasShade: false, slope: 1, surface: "brick" },
-  { id: "e5", source: "gate", target: "intersection_1", distance: 100, hasRoof: false, hasShade: true, slope: 1, surface: "asphalt" },
-  { id: "e6", source: "youbike_gate", target: "intersection_1", distance: 80, hasRoof: false, hasShade: false, slope: 1, surface: "asphalt" },
+  // 八德路與科研大樓、教學大樓連接口
+  { id: "e5", source: "youbike_bade", target: "building_science", distance: 180, hasRoof: false, hasShade: true, slope: 1, surface: "asphalt" },
+  { id: "e33", source: "youbike_bade", target: "building_1st", distance: 250, hasRoof: false, hasShade: false, slope: 1, surface: "asphalt" },
+  { id: "e9", source: "building_red", target: "building_science", distance: 80, hasRoof: false, hasShade: true, slope: 1, surface: "brick" },
 
-  // 椰林大道向內延伸
-  { id: "e7", source: "intersection_1", target: "intersection_2", distance: 180, hasRoof: false, hasShade: true, slope: 1, surface: "asphalt" }, // 到綜合大樓前
-  { id: "e8", source: "intersection_1", target: "intersection_3", distance: 140, hasRoof: false, hasShade: false, slope: 1, surface: "asphalt" }, // 到活大路口
-  { id: "e9", source: "intersection_3", target: "intersection_6", distance: 260, hasRoof: false, hasShade: true, slope: 1, surface: "asphalt" }, // 往宿舍方向
+  // 忠孝新生站與圖書館、綠光庭園 (南部入口)
+  { id: "e20", source: "library", target: "youbike_xinsheng_4", distance: 80, hasRoof: false, hasShade: true, slope: 1, surface: "brick" },
+  { id: "e21", source: "library", target: "youbike_xinsheng_3", distance: 40, hasRoof: false, hasShade: true, slope: 1, surface: "brick" },
+  { id: "e22", source: "youbike_xinsheng_4", target: "youbike_xinsheng_3", distance: 90, hasRoof: false, hasShade: false, slope: 1, surface: "asphalt" },
+  
+  // 圖書館、綠光庭園與教學區
+  { id: "e18", source: "building_zhongzheng", target: "library", distance: 160, hasRoof: false, hasShade: true, slope: 1, surface: "marble" }, // 大理石路面 (雨天易滑)
+  { id: "e19", source: "library", target: "green_garden", distance: 80, hasRoof: false, hasShade: true, slope: 1, surface: "marble" },  // 大理石路面
+  { id: "e16", source: "building_3rd", target: "green_garden", distance: 80, hasRoof: false, hasShade: true, slope: 1, surface: "brick" },
+  { id: "e32", source: "building_red", target: "green_garden", distance: 190, hasRoof: true, hasShade: true, slope: 1, surface: "brick" }, // 綠意長廊
 
-  // 宿舍區域
-  { id: "e10", source: "dorm_female", target: "youbike_dorm", distance: 50, hasRoof: true, hasShade: false, slope: 1, surface: "brick" },
-  { id: "e11", source: "dorm_male", target: "youbike_dorm", distance: 80, hasRoof: false, hasShade: true, slope: 2, surface: "asphalt" },
-  { id: "e12", source: "dorm_female", target: "intersection_6", distance: 110, hasRoof: false, hasShade: true, slope: 1, surface: "asphalt" },
-  { id: "e13", source: "dorm_male", target: "intersection_6", distance: 180, hasRoof: false, hasShade: true, slope: 2, surface: "asphalt" },
-  { id: "e14", source: "youbike_dorm", target: "intersection_6", distance: 100, hasRoof: false, hasShade: true, slope: 1, surface: "asphalt" },
+  // 教學區內部通道
+  { id: "e6", source: "building_science", target: "building_1st", distance: 140, hasRoof: false, hasShade: true, slope: 1, surface: "brick" },
+  { id: "e7", source: "building_red", target: "building_admin", distance: 20, hasRoof: true, hasShade: false, slope: 1, surface: "brick" },
+  { id: "e8", source: "building_red", target: "building_1st", distance: 70, hasRoof: false, hasShade: true, slope: 1, surface: "brick" },
+  { id: "e10", source: "building_1st", target: "building_2nd", distance: 60, hasRoof: true, hasShade: false, slope: 1, surface: "brick" },
+  { id: "e11", source: "building_1st", target: "building_common", distance: 150, hasRoof: false, hasShade: true, slope: 1, surface: "brick" },
+  { id: "e12", source: "building_2nd", target: "building_3rd", distance: 90, hasRoof: false, hasShade: false, slope: 2, surface: "brick" }, // 微陡坡路面
+  { id: "e13", source: "building_2nd", target: "building_comprehensive", distance: 110, hasRoof: true, hasShade: true, slope: 1, surface: "brick" },
+  { id: "e14", source: "building_2nd", target: "building_4th", distance: 100, hasRoof: true, hasShade: false, slope: 1, surface: "brick" },
+  { id: "e15", source: "building_3rd", target: "building_zhongzheng", distance: 70, hasRoof: false, hasShade: false, slope: 1, surface: "brick" },
+  { id: "e17", source: "building_zhongzheng", target: "building_comprehensive", distance: 90, hasRoof: false, hasShade: true, slope: 1, surface: "brick" },
 
-  // 綜合大樓與周邊
-  { id: "e15", source: "intersection_2", target: "building_comprehensive", distance: 50, hasRoof: true, hasShade: false, slope: 1, surface: "brick" },
-  { id: "e16", source: "building_comprehensive", target: "intersection_5", distance: 240, hasRoof: true, hasShade: true, slope: 1, surface: "brick" }, // 科研館連通道，少淋雨/有蔭
-  { id: "e17", source: "intersection_2", target: "intersection_4", distance: 230, hasRoof: false, hasShade: false, slope: 1, surface: "asphalt" }, // 露天大路，無雨遮/無遮蔭
+  // 綜合、共同、先鋒大樓 (東側教學區)
+  { id: "e24", source: "building_comprehensive", target: "building_4th", distance: 120, hasRoof: true, hasShade: true, slope: 1, surface: "brick" },
+  { id: "e25", source: "building_comprehensive", target: "building_pioneer", distance: 120, hasRoof: true, hasShade: false, slope: 1, surface: "brick" },
+  { id: "e26", source: "building_4th", target: "building_common", distance: 70, hasRoof: true, hasShade: false, slope: 1, surface: "brick" },
+  { id: "e27", source: "building_common", target: "building_pioneer", distance: 50, hasRoof: false, hasShade: false, slope: 3, surface: "brick" }, // 陡坡與戶外台階
 
-  // 活大路口、圖書館路口與總圖
-  { id: "e18", source: "intersection_3", target: "intersection_4", distance: 110, hasRoof: false, hasShade: true, slope: 1, surface: "asphalt" },
-  { id: "e19", source: "intersection_4", target: "youbike_lib", distance: 80, hasRoof: false, hasShade: true, slope: 1, surface: "asphalt" },
-  { id: "e20", source: "intersection_4", target: "library", distance: 120, hasRoof: false, hasShade: true, slope: 1, surface: "marble" }, // 總圖前，大理石路面 (雨天易滑)
-  { id: "e21", source: "youbike_lib", target: "library", distance: 40, hasRoof: false, hasShade: true, slope: 1, surface: "brick" },
-
-  // 圖書館往科研館、共同教室
-  { id: "e22", source: "library", target: "building_common", distance: 100, hasRoof: true, hasShade: true, slope: 1, surface: "brick" },
-  { id: "e23", source: "library", target: "intersection_5", distance: 220, hasRoof: false, hasShade: true, slope: 2, surface: "asphalt" },
-  { id: "e24", source: "building_common", target: "intersection_5", distance: 170, hasRoof: false, hasShade: true, slope: 3, surface: "brick" }, // 陡坡與樓梯 (無障礙處罰重)
-
-  // 科研館與周邊
-  { id: "e25", source: "intersection_5", target: "youbike_science", distance: 70, hasRoof: false, hasShade: false, slope: 1, surface: "asphalt" },
-  { id: "e26", source: "intersection_5", target: "building_science", distance: 80, hasRoof: true, hasShade: true, slope: 1, surface: "brick" },
-  { id: "e27", source: "youbike_science", target: "building_science", distance: 120, hasRoof: false, hasShade: false, slope: 1, surface: "asphalt" },
-
-  // 跨區捷徑（純戶外，下雨曝曬皆最嚴重，但距離最短）
-  { id: "e28", source: "intersection_1", target: "intersection_5", distance: 380, hasRoof: false, hasShade: false, slope: 1, surface: "asphalt" }
+  // 先鋒、宿舍、億光大樓 (東南側宿舍與聯外區)
+  { id: "e28", source: "building_pioneer", target: "youbike_ee", distance: 290, hasRoof: false, hasShade: true, slope: 1, surface: "asphalt" },
+  { id: "e29", source: "youbike_ee", target: "dorm_ntut", distance: 50, hasRoof: true, hasShade: false, slope: 1, surface: "brick" },
+  { id: "e30", source: "youbike_ee", target: "building_yiguang", distance: 200, hasRoof: false, hasShade: false, slope: 1, surface: "asphalt" },
+  { id: "e31", source: "dorm_ntut", target: "building_yiguang", distance: 170, hasRoof: false, hasShade: true, slope: 1, surface: "asphalt" }
 ];

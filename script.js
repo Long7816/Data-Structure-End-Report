@@ -7,8 +7,8 @@
 // ==========================================
 let currentScenarioId = "normal"; // 預設晴朗
 let currentModeId = "fastest";     // 預設最快
-let startNodeId = "mrt_xinsheng"; // 預設起點
-let endNodeId = "building_science"; // 預設終點
+let startNodeId = "youbike_xinsheng_4"; // 預設起點 (忠孝新生4號出口)
+let endNodeId = "building_science";     // 預設終點 (科研大樓)
 
 // 動態資料結構：使用 JavaScript Object 作為 Hash Map，提供 O(1) 的查詢與更新
 let youbikeHashMap = {};    // 儲存 YouBike 站點車位狀態
@@ -894,27 +894,27 @@ function updateAlgorithmExplanation(scenario) {
   } else if (currentModeId === "pollution") {
     detailsHtml = `
       <div style="margin-bottom: 8px;"><strong>😷 避開空污模式：</strong></div>
-      <div>AQI 超標 165，系統更新主幹道 (校門口大道、新生聯外路網) 之處罰權重<strong>增加 200%</strong>。導航自動規劃繞行至校園內側林蔭深處之少廢氣路段。</div>
+      <div>AQI 超標 165，系統更新主幹道 (新生南路、三創、八德路) 之處罰權重<strong>增加 200%</strong>。導航自動規劃繞行至校園內側林蔭深處之少廢氣路段。</div>
     `;
   } else if (currentModeId === "bike") {
     // 騎車轉乘模式
-    const mrtBikes = youbikeHashMap["youbike_mrt"] ? youbikeHashMap["youbike_mrt"].bikes : 0;
-    const scienceDocks = youbikeHashMap["youbike_science"] ? youbikeHashMap["youbike_science"].docks : 0;
+    const mrtBikes = youbikeHashMap["youbike_xinsheng_4"] ? youbikeHashMap["youbike_xinsheng_4"].bikes : 0;
+    const scienceDocks = youbikeHashMap["youbike_ee"] ? youbikeHashMap["youbike_ee"].docks : 0;
     
     detailsHtml = `
       <div style="margin-bottom: 8px;"><strong>🚲 騎車轉乘模式：</strong></div>
       <div style="margin-bottom: 4px;">結合步行與騎乘。騎車段時間權重除以 3 (速度提升 3 倍)，但限制 slope &ge; 3 (樓梯) 禁止騎車。</div>
-      \${scenario.name === "YouBike 供需失衡" ? \`
+      ${scenario.name === "YouBike 供需失衡" ? `
         <div style="color: var(--error-color); margin-top: 6px; border-top: 1px dashed rgba(255,180,171,0.2); padding-top: 4px;">
           <strong>⚠️ YouBike 臨界繞道警告：</strong><br>
-          偵測到起點捷運站可用車為 <strong>\${mrtBikes} 輛</strong>，目的地科研館站可用空車位為 <strong>\${scienceDocks} 個</strong> (皆 &lt; 3，高風險臨界)。<br>
-          演算法自動修改中繼導航點，引導騎士步行前往最近且車源充沛的<strong>「YouBike 校門口站」</strong>借車，並改騎至車位充裕的<strong>「YouBike 圖書館站」</strong>還車後步行抵達。
+          偵測到起點忠孝新生站(4號出口)可用車為 <strong>${mrtBikes} 輛</strong>，目的地電機工程系站可用空車位為 <strong>${scienceDocks} 個</strong> (皆 &lt; 3，高風險臨界)。<br>
+          演算法自動修改中繼導航點，引導騎士步行前往最近且車源充沛的<strong>「youbike忠孝新生站(3號出口)」</strong>借車，並改騎至車位充裕的<strong>「youbike八德市場」</strong>還車後步行抵達。
         </div>
-      \` : \`
+      ` : `
         <div style="color: var(--primary-color); margin-top: 6px;">
           ✓ YouBike 站點車位皆充足，導航優先選取直線最近站點轉乘。
         </div>
-      \`}
+      `}
     `;
   }
 

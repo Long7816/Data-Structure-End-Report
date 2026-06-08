@@ -1,6 +1,7 @@
 /**
  * 幸福通勤導航 - 環境與天氣情境設定
  * 用於模擬各種外部變數對路權權重的影響及 YouBike 站點車位狀態。
+ * 配合真實經緯度地點對應的 YouBike 站點鍵值進行了同步更新。
  */
 
 const ENVIRONMENTAL_SCENARIOS = {
@@ -15,11 +16,12 @@ const ENVIRONMENTAL_SCENARIOS = {
     },
     // YouBike 站點狀態：{ 站點ID: { bikes: 可借車輛, docks: 可還空位 } }
     youbike: {
-      "youbike_mrt": { bikes: 15, docks: 15 },
-      "youbike_gate": { bikes: 12, docks: 18 },
-      "youbike_dorm": { bikes: 8, docks: 12 },
-      "youbike_science": { bikes: 14, docks: 16 },
-      "youbike_lib": { bikes: 10, docks: 20 }
+      "youbike_guanghua": { bikes: 15, docks: 15 },
+      "youbike_ee": { bikes: 12, docks: 18 },
+      "youbike_xinsheng_4": { bikes: 8, docks: 22 },
+      "youbike_xinsheng_3": { bikes: 14, docks: 16 },
+      "youbike_xinsheng_1": { bikes: 10, docks: 20 },
+      "youbike_bade": { bikes: 15, docks: 15 }
     },
     // 邊權重處罰加乘 (0 表示不額外處罰)
     penalties: {
@@ -41,11 +43,12 @@ const ENVIRONMENTAL_SCENARIOS = {
       aqi: 60
     },
     youbike: {
-      "youbike_mrt": { bikes: 15, docks: 15 },
-      "youbike_gate": { bikes: 12, docks: 18 },
-      "youbike_dorm": { bikes: 5, docks: 15 },
-      "youbike_science": { bikes: 14, docks: 16 },
-      "youbike_lib": { bikes: 10, docks: 20 }
+      "youbike_guanghua": { bikes: 15, docks: 15 },
+      "youbike_ee": { bikes: 5, docks: 25 },
+      "youbike_xinsheng_4": { bikes: 8, docks: 22 },
+      "youbike_xinsheng_3": { bikes: 14, docks: 16 },
+      "youbike_xinsheng_1": { bikes: 10, docks: 20 },
+      "youbike_bade": { bikes: 15, docks: 15 }
     },
     penalties: {
       noShade: 2.5,    // 沒遮蔭的路權重增加 250% (極度排斥陽光)
@@ -66,11 +69,12 @@ const ENVIRONMENTAL_SCENARIOS = {
       aqi: 30
     },
     youbike: {
-      "youbike_mrt": { bikes: 8, docks: 22 },
-      "youbike_gate": { bikes: 5, docks: 25 },
-      "youbike_dorm": { bikes: 6, docks: 14 },
-      "youbike_science": { bikes: 11, docks: 19 },
-      "youbike_lib": { bikes: 4, docks: 26 }
+      "youbike_guanghua": { bikes: 8, docks: 22 },
+      "youbike_ee": { bikes: 5, docks: 25 },
+      "youbike_xinsheng_4": { bikes: 6, docks: 24 },
+      "youbike_xinsheng_3": { bikes: 11, docks: 19 },
+      "youbike_xinsheng_1": { bikes: 4, docks: 26 },
+      "youbike_bade": { bikes: 8, docks: 22 }
     },
     penalties: {
       noShade: 0,
@@ -91,13 +95,13 @@ const ENVIRONMENTAL_SCENARIOS = {
       aqi: 165
     },
     youbike: {
-      "youbike_mrt": { bikes: 15, docks: 15 },
-      "youbike_gate": { bikes: 12, docks: 18 },
-      "youbike_dorm": { bikes: 8, docks: 12 },
-      "youbike_science": { bikes: 14, docks: 16 },
-      "youbike_lib": { bikes: 10, docks: 20 }
+      "youbike_guanghua": { bikes: 15, docks: 15 },
+      "youbike_ee": { bikes: 12, docks: 18 },
+      "youbike_xinsheng_4": { bikes: 8, docks: 22 },
+      "youbike_xinsheng_3": { bikes: 14, docks: 16 },
+      "youbike_xinsheng_1": { bikes: 10, docks: 20 },
+      "youbike_bade": { bikes: 15, docks: 15 }
     },
-    // 對鄰近大馬路的邊（如 e1, e3, e5, e7, e28 等）套用空污路段標籤並處罰
     penalties: {
       noShade: 0,
       noRoof: 0,
@@ -105,13 +109,13 @@ const ENVIRONMENTAL_SCENARIOS = {
       slope: 0,
       pollution: 2.0   // 污染幹道權重增加 200% 處罰，導引走內部小徑
     },
-    pollutedEdges: ["e1", "e3", "e5", "e7", "e28"] // 受污染影響的主幹道
+    pollutedEdges: ["e1", "e2", "e4", "e23"] // 受污染影響的聯外主幹道 (新生南路、三創、八德路)
   },
 
   // 5. YouBike 車位吃緊情境 (🚲)
   "youbike_clog": {
     name: "YouBike 供需失衡",
-    description: "捷運站借不到車，或目的地科研館站滿位無法還車。演算法將強制自動繞道或引導至鄰近替代站點。",
+    description: "捷運站借不到車，或目的地電機工程系站滿位無法還車。演算法將強制自動繞道或引導至鄰近替代站點。",
     weather: {
       temperature: 23,
       condition: "sunny",
@@ -119,11 +123,12 @@ const ENVIRONMENTAL_SCENARIOS = {
     },
     // YouBike 站點狀態吃緊
     youbike: {
-      "youbike_mrt": { bikes: 1, docks: 29 },       // 可借車數 < 3 (黃/紅燈)
-      "youbike_gate": { bikes: 15, docks: 15 },
-      "youbike_dorm": { bikes: 10, docks: 10 },
-      "youbike_science": { bikes: 28, docks: 2 },    // 可還位數 < 3 (黃/紅燈)
-      "youbike_lib": { bikes: 12, docks: 18 }
+      "youbike_guanghua": { bikes: 15, docks: 15 },
+      "youbike_ee": { bikes: 28, docks: 2 },         // 電機工程系站滿位 (可用還車位 < 3)
+      "youbike_xinsheng_4": { bikes: 1, docks: 29 },    // 新生南路4出口站無車 (可用車量 < 3)
+      "youbike_xinsheng_3": { bikes: 14, docks: 16 },
+      "youbike_xinsheng_1": { bikes: 10, docks: 20 },
+      "youbike_bade": { bikes: 15, docks: 15 }
     },
     penalties: {
       noShade: 0,
