@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>幸福通勤導航：校園動態路徑規劃系統</title>
+  
+  <!-- Material Symbols Outlined (用於圖標) -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  
+  <!-- 核心樣式表 -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- 頂部導覽列 -->
+  <header class="header-bar">
+    <div class="brand">
+      <span class="material-symbols-outlined">navigation</span>
+      幸福通勤導航
+      <span class="brand-sub">DS Final Project</span>
+    </div>
+    <nav class="nav-actions">
+      <a class="nav-item active">
+        <span class="material-symbols-outlined">map</span>地圖導航
+      </a>
+      <a href="https://github.com/Long7816/Data-Structure-End-Report" target="_blank" class="nav-item">
+        <span class="material-symbols-outlined">code</span>GitHub 專案
+      </a>
+    </nav>
+  </header>
+
+  <!-- 主內容區域 -->
+  <div class="main-container">
+    
+    <!-- 左側控制面板 (Sidebar) -->
+    <aside class="control-sidebar">
+      <div class="sidebar-scrollable">
+        
+        <!-- 標題簡介 -->
+        <div style="margin-bottom: var(--spacing-md);">
+          <h2 class="section-title">
+            <span class="material-symbols-outlined">settings_suggest</span>
+            起訖規劃與導航
+          </h2>
+          
+          <!-- 起點與終點選擇 -->
+          <div class="glass-card" style="margin-bottom: var(--spacing-sm);">
+            <div class="input-group">
+              <label class="input-label" for="start-select">起點 (出發點)</label>
+              <div class="select-wrapper">
+                <select id="start-select" class="select-input">
+                  <!-- JS 動態寫入 -->
+                </select>
+              </div>
+            </div>
+            
+            <div class="swap-btn-container">
+              <button id="swap-btn" class="swap-btn" title="切換起訖點">
+                <span class="material-symbols-outlined">swap_vert</span>
+              </button>
+            </div>
+            
+            <div class="input-group" style="margin-bottom: 12px;">
+              <label class="input-label" for="end-select">目的地 (終點)</label>
+              <div class="select-wrapper">
+                <select id="end-select" class="select-input">
+                  <!-- JS 動態寫入 -->
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 開始導航 CTA -->
+          <button id="navigate-btn" class="btn-primary">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">near_me</span>
+            開始導航
+          </button>
+        </div>
+
+        <!-- 天氣與環境模擬 -->
+        <div style="margin-bottom: var(--spacing-md);">
+          <h2 class="section-title">
+            <span class="material-symbols-outlined">thunderstorm</span>
+            環境情境模擬
+          </h2>
+          <div class="scenario-grid">
+            <div class="scenario-card active" data-scenario="normal">
+              <span class="scenario-emoji">☀️</span>
+              <span class="scenario-name">晴朗舒適</span>
+              <span class="scenario-desc">預設正常氣候狀態</span>
+            </div>
+            <div class="scenario-card" data-scenario="heat">
+              <span class="scenario-emoji">🥵</span>
+              <span class="scenario-name">烈日高溫</span>
+              <span class="scenario-desc">溫度達 38°C 爆汗</span>
+            </div>
+            <div class="scenario-card" data-scenario="rain">
+              <span class="scenario-emoji">🌧️</span>
+              <span class="scenario-name">突然暴雨</span>
+              <span class="scenario-desc">路滑且易被大雨淋濕</span>
+            </div>
+            <div class="scenario-card" data-scenario="pollution">
+              <span class="scenario-emoji">😷</span>
+              <span class="scenario-name">空氣污染</span>
+              <span class="scenario-desc">AQI 165 紅色警戒</span>
+            </div>
+            <div class="scenario-card" style="grid-column: span 2;" data-scenario="youbike_clog">
+              <span class="scenario-emoji">🚲</span>
+              <span class="scenario-name">YouBike 站點車位吃緊</span>
+              <span class="scenario-desc">模擬捷運無車、目的地滿位臨界警告</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 導航偏好模式 (Dijkstra Penalty Switcher) -->
+        <div style="margin-bottom: var(--spacing-md);">
+          <h2 class="section-title">
+            <span class="material-symbols-outlined">tune</span>
+            幸福通勤偏好模式
+          </h2>
+          <div class="mode-tabs">
+            <button class="mode-tab active" data-mode="fastest">
+              <span>⚡</span>最快路線
+            </button>
+            <button class="mode-tab" data-mode="bike">
+              <span>🚲</span>騎車轉乘
+            </button>
+            <button class="mode-tab" data-mode="coolest">
+              <span>🍃</span>最涼避曝曬
+            </button>
+            <button class="mode-tab" data-mode="dry">
+              <span>☔</span>少淋雨走廊
+            </button>
+            <button class="mode-tab" data-mode="accessible">
+              <span>♿</span>無障礙避陡坡
+            </button>
+            <button class="mode-tab" data-mode="pollution">
+              <span>😷</span>避開空污段
+            </button>
+          </div>
+        </div>
+
+        <!-- 資料結構與演算法監控 -->
+        <div>
+          <h2 class="section-title">
+            <span class="material-symbols-outlined">terminal</span>
+            演算法與資料結構解說
+          </h2>
+          <div class="glass-card" style="border-left: 4px solid var(--secondary-color); margin-bottom: 0;">
+            <div class="monitor-row">
+              <span>Hash Map 狀態查詢</span>
+              <span class="monitor-value">O(1)</span>
+            </div>
+            <div class="monitor-row">
+              <span>Dijkstra 路權運算</span>
+              <span class="monitor-value">O((V+E) log V)</span>
+            </div>
+            <div class="monitor-bar">
+              <div class="monitor-bar-fill"></div>
+            </div>
+            
+            <!-- 動態說明的容器 -->
+            <div id="algorithm-desc-container" style="font-size: 11.5px; color: var(--text-secondary); margin-top: 14px; line-height: 1.6;">
+              <!-- 由 JS 動態渲染 -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- 右側地圖區域 (Map Visualization Canvas) -->
+    <main class="map-canvas">
+      <!-- 科技背景網線 -->
+      <div class="map-grid"></div>
+      
+      <!-- 路線圖示說明 (Legend) -->
+      <div class="route-legend">
+        <div class="legend-item">
+          <div class="legend-color-line original"></div>
+          <span>物理最快路線 (無優化)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color-line happy"></div>
+          <span>優化幸福導航路線</span>
+        </div>
+      </div>
+
+      <!-- SVG 地圖繪製畫布 -->
+      <svg id="map-svg" class="map-svg" viewBox="0 0 1000 800" preserveAspectRatio="xMidYMid meet">
+        <!-- 半透明多邊形環境遮罩層 -->
+        <g id="overlays-group">
+          <!-- 突然暴雨區 (Blue polygon) -->
+          <polygon id="rain-overlay" class="overlay-polygon rain-overlay" points="400,150 780,180 720,620 480,480"></polygon>
+          <!-- 烈日曝曬區 (Orange polygon) -->
+          <polygon id="heat-overlay" class="overlay-polygon heat-overlay" points="150,300 480,280 580,520 250,500"></polygon>
+        </g>
+
+        <!-- 地圖環境區域標籤 -->
+        <text id="rain-label" class="overlay-label" x="600" y="240" font-family="'Montserrat', sans-serif" font-weight="900" font-size="14" fill="#00bdfd">🌧️ 暴雨無遮蓋區</text>
+        <text id="heat-label" class="overlay-label" x="300" y="380" font-family="'Montserrat', sans-serif" font-weight="900" font-size="14" fill="#ff8c00">☀️ 烈日曝曬區</text>
+
+        <!-- 基礎道路線段層 -->
+        <g id="edges-group"></g>
+
+        <!-- 路線渲染層 (先渲染的在下，後在頂) -->
+        <!-- 1. 原始最快路線 (紅虛線) -->
+        <path id="route-original" class="path-original" d=""></path>
+        
+        <!-- 2. 幸福導航路線 (發光綠線) -->
+        <path id="route-happy" class="path-happy" d=""></path>
+        
+        <!-- 3. 流光動畫點綴 (流動效果) -->
+        <path id="route-flow" class="path-happy path-flow" d="" stroke="rgba(255,255,255,0.7)" stroke-width="2" opacity="0.8"></path>
+
+        <!-- 地標節點層 -->
+        <g id="nodes-group"></g>
+
+        <!-- YouBike 站點專用標記層 -->
+        <g id="youbike-group"></g>
+      </svg>
+
+      <!-- 地圖浮動統計數據卡 -->
+      <div id="floating-card" class="map-floating-card">
+        <div class="floating-stat-group">
+          <span class="floating-stat-label">預估抵達時間</span>
+          <span id="stat-time" class="floating-stat-value">-- 分鐘</span>
+        </div>
+        
+        <div class="floating-divider"></div>
+        
+        <div class="floating-icon-stats">
+          <!-- 高溫曝曬統計 -->
+          <div id="stat-item-sun" class="icon-stat-item" data-type="sun">
+            <span class="icon">sunny</span>
+            <span class="icon-stat-text">0%</span>
+            <span class="icon-stat-sub">路徑曝曬</span>
+          </div>
+          <!-- 下雨淋雨統計 -->
+          <div id="stat-item-rain" class="icon-stat-item" data-type="rain">
+            <span class="icon">water_drop</span>
+            <span class="icon-stat-text">0%</span>
+            <span class="icon-stat-sub">路徑淋雨</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 自訂 Toast 提示 (防呆用) -->
+      <div id="alert-toast" class="alert-toast">
+        <span class="icon">info</span>
+        <span class="toast-text">提示訊息</span>
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- 載入 Graph 與 情境模擬 資料 (宣告為全域變數以供 script.js 存取) -->
+  <script src="data/campusGraph.js"></script>
+  <script src="data/disasterScenario.js"></script>
+  
+  <!-- 載入主逻辑腳本 -->
+  <script src="script.js"></script>
+</body>
+</html>
