@@ -7,35 +7,35 @@
 // x, y 坐標由真實經緯度經 SVG 投影轉換 (對應 1000x800 畫布，留有邊距)
 const CAMPUS_NODES = {
   // 教學大樓與主要目的地 (building)
-  "building_science": { id: "building_science", name: "科研大樓", x: 446.2, y: 280.5, type: "building" },
-  "building_4th": { id: "building_4th", name: "第四教學大樓", x: 629.2, y: 376.0, type: "building" },
-  "building_3rd": { id: "building_3rd", name: "第三教學大樓", x: 500.0, y: 509.8, type: "building" },
-  "building_2nd": { id: "building_2nd", name: "第二教學大樓", x: 543.1, y: 433.3, type: "building" },
-  "building_1st": { id: "building_1st", name: "第一教學大樓", x: 543.1, y: 376.0, type: "building" },
-  "building_comprehensive": { id: "building_comprehensive", name: "綜合大樓", x: 640.0, y: 490.7, type: "building" },
-  "building_common": { id: "building_common", name: "共同科館", x: 693.8, y: 376.0, type: "building" },
-  "building_yiguang": { id: "building_yiguang", name: "億光大樓", x: 920.0, y: 662.7, type: "building" },
-  "building_pioneer": { id: "building_pioneer", name: "先鋒大樓", x: 704.6, y: 395.1, type: "building" },
-  "building_zhongzheng": { id: "building_zhongzheng", name: "中正館", x: 564.6, y: 548.0, type: "building" },
-  "building_red": { id: "building_red", name: "紅樓", x: 478.5, y: 356.9, type: "building" },
-  "building_admin": { id: "building_admin", name: "行政大樓", x: 480.6, y: 376.0, type: "building" }, // 真實經緯度 (121.53422, 25.0436) 修正偏位
-  "library": { id: "library", name: "圖書館", x: 424.6, y: 624.4, type: "building" },
+  "building_science": { id: "building_science", name: "科研大樓", x: 388.0, y: 338.4, type: "building" },
+  "building_4th": { id: "building_4th", name: "第四教學大樓", x: 377.5, y: 496.7, type: "building" },
+  "building_3rd": { id: "building_3rd", name: "第三教學大樓", x: 447.0, y: 496.7, type: "building" },
+  "building_2nd": { id: "building_2nd", name: "第二教學大樓", x: 456.7, y: 426.1, type: "building" },
+  "building_1st": { id: "building_1st", name: "第一教學大樓", x: 386.1, y: 424.6, type: "building" },
+  "building_comprehensive": { id: "building_comprehensive", name: "綜合大樓", x: 608.2, y: 472.9, type: "building" },
+  "building_common": { id: "building_common", name: "共同科館", x: 457.9, y: 544.9, type: "building" },
+  "building_yiguang": { id: "building_yiguang", name: "億光大樓", x: 920.0, y: 601.3, type: "building" },
+  "building_pioneer": { id: "building_pioneer", name: "先鋒大樓", x: 513.6, y: 654.2, type: "building" },
+  "building_zhongzheng": { id: "building_zhongzheng", name: "中正館", x: 636.8, y: 404.4, type: "building" },
+  "building_red": { id: "building_red", name: "紅樓", x: 474.8, y: 452.1, type: "building" },
+  "building_admin": { id: "building_admin", name: "行政大樓", x: 531.7, y: 528.8, type: "building" },
+  "library": { id: "library", name: "圖書館", x: 514.4, y: 467.5, type: "building" },
 
   // 宿舍 (dorm)
-  "dorm_ntut": { id: "dorm_ntut", name: "北科宿舍", x: 758.5, y: 720.0, type: "dorm" },
+  "dorm_ntut": { id: "dorm_ntut", name: "北科宿舍", x: 853.7, y: 415.0, type: "dorm" },
 
   // 周邊地標 (transit / landmark)
-  "guanghua_market": { id: "guanghua_market", name: "光華商場", x: 237.2, y: 80.0, type: "transit" },
-  "syntrend": { id: "syntrend", name: "三創生活園區", x: 155.4, y: 261.4, type: "transit" },
-  "green_garden": { id: "green_garden", name: "綠光庭園", x: 435.4, y: 548.0, type: "transit" },
+  "guanghua_market": { id: "guanghua_market", name: "光華商場", x: 167.4, y: 177.1, type: "transit" },
+  "syntrend": { id: "syntrend", name: "三創生活園區", x: 80.0, y: 145.8, type: "transit" },
+  "green_garden": { id: "green_garden", name: "綠光庭園", x: 322.7, y: 339.2, type: "transit" },
 
   // YouBike 站點 (youbike)
-  "youbike_guanghua": { id: "youbike_guanghua", name: "youbike光華商場站", x: 220.0, y: 146.7, type: "youbike", isYouBike: true },
-  "youbike_ee": { id: "youbike_ee", name: "youbike北科大(電機工程系)", x: 726.2, y: 681.8, type: "youbike", isYouBike: true },
-  "youbike_xinsheng_4": { id: "youbike_xinsheng_4", name: "youbike忠孝新生站(4號出口)", x: 349.2, y: 624.4, type: "youbike", isYouBike: true },
-  "youbike_xinsheng_3": { id: "youbike_xinsheng_3", name: "youbike忠孝新生站(3號出口)", x: 435.4, y: 586.2, type: "youbike", isYouBike: true },
-  "youbike_xinsheng_1": { id: "youbike_xinsheng_1", name: "youbike忠孝新生站(1號出口)", x: 80.0, y: 471.6, type: "youbike", isYouBike: true },
-  "youbike_bade": { id: "youbike_bade", name: "youbike八德市場", x: 543.1, y: 127.6, type: "youbike", isYouBike: true }
+  "youbike_guanghua": { id: "youbike_guanghua", name: "youbike光華商場站", x: 252.8, y: 246.1, type: "youbike", isYouBike: true },
+  "youbike_ee": { id: "youbike_ee", name: "youbike北科大(電機工程系)", x: 707.6, y: 621.9, type: "youbike", isYouBike: true },
+  "youbike_xinsheng_4": { id: "youbike_xinsheng_4", name: "youbike忠孝新生站(4號出口)", x: 311.9, y: 560.7, type: "youbike", isYouBike: true },
+  "youbike_xinsheng_3": { id: "youbike_xinsheng_3", name: "youbike忠孝新生站(3號出口)", x: 374.4, y: 630.0, type: "youbike", isYouBike: true },
+  "youbike_xinsheng_1": { id: "youbike_xinsheng_1", name: "youbike忠孝新生站(1號出口)", x: 170.0, y: 520.7, type: "youbike", isYouBike: true },
+  "youbike_bade": { id: "youbike_bade", name: "youbike八德市場", x: 722.6, y: 265.1, type: "youbike", isYouBike: true }
 };
 
 // 邊資料 (Edges / Paths)
