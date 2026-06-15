@@ -903,29 +903,139 @@ function renderYouBikeMarkers() {
 /**
  * 點擊地圖節點可快速設定起終點 (極佳互動性)
  */
+/**
+ * 點擊地圖節點：設定導航起終點，並彈出大樓詳細資訊視窗
+ */
 function handleNodeClick(nodeId) {
   const node = CAMPUS_NODES[nodeId];
   if (!node) return;
 
-  // 如果目前終點未設定或跟起點重複，先將點選的設為起點
+  // 1. 原有的導航起終點規劃邏輯
   if (startNodeId === nodeId) {
     showToast(`📍 節點「${node.name}」已為起點。`);
-    return;
+  } else {
+    endNodeId = nodeId;
+    ensureHybridOptions();
+    if(document.getElementById("start-select")) document.getElementById("start-select").value = startNodeId;
+    if(document.getElementById("end-select")) document.getElementById("end-select").value = endNodeId;
+    calculateAndRenderRoutes();
   }
-  
-  // 否則，將點選的設為終點
-  endNodeId = nodeId;
-  ensureHybridOptions();
-  
-  document.getElementById("start-select").value = startNodeId;
-  document.getElementById("end-select").value = endNodeId;
-  
-  calculateAndRenderRoutes();
+
+  // 2. 新增功能：只有當點擊的節點類型是 "building"（大樓）或具備有名稱的地標時，才顯示詳細資訊
+  if (node.type === "building" || node.name) {
+    openLandmarkModal(node);
+  }
 }
 
 /**
- * 核心：重新計算並繪製兩條路線對比（原始最快 vs 幸福優化）
+ * 動態開啟彈出視窗並加載對應的北科大圖片與大樓描述
  */
+/**
+ * 動態開啟彈出視窗並加載對應的北科大圖片與大樓描述
+ */
+/**
+ * 動態開啟彈出視窗並加載對應的北科大圖片與大樓描述
+ */
+function openLandmarkModal(node) {
+  const modal = document.getElementById("landmark-modal");
+  const titleEl = document.getElementById("modal-title");
+  const imgEl = document.getElementById("modal-image"); 
+  const descEl = document.getElementById("modal-desc");
+
+  if (!modal || !titleEl || !imgEl || !descEl) return;
+
+  // 1. 動態設定視窗標題
+  titleEl.textContent = node.name;
+
+  // 2. 定義需要顯示圖片框與詳細介紹的節點 ID 清單
+  // 包含你原本的所有大樓，以及這次新指定的地點
+  const showImageNodes = [
+    "building_science", "building_1st", "building_2nd", "building_3rd", "building_4th", 
+    "building_common", "building_zhongzheng", "building_comprehensive", "building_pioneer",
+    "spot_green_garden", "spot_guanghua", "spot_syntrend", "spot_dorm"
+  ];
+
+  // 3. 判斷是否屬於要顯示圖片的地點
+  if (node.type === "building" || showImageNodes.includes(node.id) || node.name === "綠光庭園" || node.name === "光華商場" || node.name === "三創生活園區" || node.name === "北科宿舍") {
+    
+    // 確保圖片框是顯示的
+    imgEl.style.display = "block";
+
+    // 動態組合圖片路徑：./photos/台北科技大學/地點名稱.jpg
+    const imagePath = `./photos/台北科技大學/${node.name}.jpg`;
+    imgEl.src = imagePath;
+
+    // 防破圖機制：如果你本地還沒放這張照片，會自動生成帶有地點名稱的科技感暫時底圖
+    imgEl.onerror = function() {
+      this.onerror = null;
+      this.src = "https://placehold.co/400x200/1e1e24/2ecc71?text=" + encodeURIComponent(node.name + " (圖片載入中/暫無圖片)");
+    };
+
+    // 4. 依據節點 ID 分流給予最精準的詳細地點資訊
+    let locationInfo = "";
+    switch (node.id) {
+      // --- 原有教學大樓資訊 ---
+      case "building_science":
+        locationInfo = "國立台北科技大學的指標建築，內含精密儀器中心、多功能講堂、化學工程與生物科技相關實驗室及教授研究室。";
+        break;
+      case "building_1st":
+        locationInfo = "第一教學大樓。校園內歷史悠久的教學大樓，主要為各科系核心專業教室、基礎學科實驗室以及行政討論空間。";
+        break;
+      case "building_2nd":
+        locationInfo = "第二教學大樓。內含多間多媒體階梯教室與資訊科學、電子工程相關實驗室，是學生修習專業科目的重要基地。";
+        break;
+      case "building_3rd":
+        locationInfo = "第三教學大樓。主要提供給工程學院、機械系等相關核心課程使用，並設有專屬的研究生與專題實作空間。";
+        break;
+      case "building_4th":
+        locationInfo = "第四教學大樓。緊鄰共同科館，內部包含多間大型共同課堂、外語教學中心教室，是全校學生通識與語文必修的核心上課地點。";
+        break;
+      case "building_common":
+        locationInfo = "共同科館。北科大最具代表性的核心地標之一，前方有著名的紅樓與草皮。通識教育中心與多數基礎學科教授辦公室皆位於此。";
+        break;
+      case "building_zhongzheng":
+        locationInfo = "中正館。大型集會與體育多功能場館，學校重要典禮（如畢業典禮、校慶）、大型室內體育競賽及社團成果發表的主要舉辦場地。";
+        break;
+      case "building_comprehensive":
+        locationInfo = "綜合大樓。包含地下室活動中心、學生餐廳、生活福利社，以及上層的學務處、教務處等各項師生生活機能與行政申辦窗口。";
+        break;
+      case "building_pioneer":
+        locationInfo = "先鋒國際研發大樓。高聳的新型科技大樓，內部設有國際產學合作實驗室、大型多功能國際會議廳，是校園推動前瞻研發的重要核心。";
+        break;
+
+      // --- 🌟 新增：周邊重要聯外節點資訊 ---
+      case "spot_green_garden":
+        locationInfo = "綠光庭園。位於校園核心的生態景觀綠地，綠意盎然、環境清幽。提供了師生在課餘時間散步、休憩、討論專題與放鬆身心的絕佳戶外開放空間。";
+        break;
+      case "spot_guanghua":
+        locationInfo = "光華商場（光華數位新天地）。全台最知名的電子零件、電腦週邊及數位產品核心商圈，緊鄰北科大西側，是資工、電子系學生採購專題實驗材料與硬體設備的科技補給站。";
+        break;
+      case "spot_syntrend":
+        locationInfo = "三創生活園區。緊鄰光華商場的現代化科技生活購物中心，匯集了各大國際科技品牌旗艦店、動漫文化精品及創客體驗空間，是校園周邊極具指標性的前沿科技與潮流地標。";
+        break;
+      case "spot_dorm":
+        locationInfo = "北科宿舍（學生宿舍群）。提供外地與國際學生在校安居的核心生活區。本導航系統特別針對高溫情境，為從宿舍出發趕早八上課的同學優化了多樹蔭與遮陽廊道之幸福路線。";
+        break;
+
+      default:
+        locationInfo = node.description || `這是位於台北科技大學附近的「${node.name}」，可點擊控制台切換幸福偏好模式以進行動態路徑規劃導航。`;
+    }
+    descEl.textContent = locationInfo;
+
+  } else if (node.type === "youbike") {
+    // 如果是 YouBike 站點，保持隱藏圖片框，呈現即時 Hash Map 資訊
+    imgEl.style.display = "none";
+    descEl.textContent = node.description || `這是「${node.name}」公共自行車租借站。您可以透過系統即時監控此站點在 Hash Map 中的車位狀態與 O(1) 剩餘數量。`;
+  } else {
+    // 捷運站或一般交叉路口等其他節點，預設隱藏圖片框
+    imgEl.style.display = "none";
+    descEl.textContent = node.description || `導航路網節點：「${node.name}」，已成功定位至系統路網圖中。`;
+  }
+
+  // 5. 順暢喚出 Modal 視窗
+  modal.classList.add("show");
+}
+
 function calculateAndRenderRoutes() {
   if (typeof CAMPUS_NODES === 'undefined' || typeof CAMPUS_EDGES === 'undefined') {
       console.error("錯誤：未成功載入 campusGraph.js 的路網資料！");
@@ -1440,6 +1550,35 @@ function finishAlgoDemo(success) {
   }
   simState.finishing = false;
 }
+
+// ==========================================
+// 修正：地標彈出視窗 (Modal) 關閉事件綁定
+// ==========================================
+document.addEventListener("DOMContentLoaded", () => {
+  const modal = document.getElementById("landmark-modal");
+  const closeBtn = document.getElementById("close-modal-btn");
+
+  if (closeBtn && modal) {
+    // 1. 點擊右上角叉叉 (×) 時關閉視窗
+    closeBtn.addEventListener("click", (e) => {
+      e.stopPropagation(); // 防止事件向上冒泡觸發到地圖點擊
+      modal.classList.remove("show");
+    });
+
+    // 2. 點擊彈出視窗以外的半透明黑色背景區時，也能自動關閉
+    modal.addEventListener("click", (e) => {
+      // 確保點擊到的是最外層黑底 (landmark-modal) 本身，而不是裡面的文字內容區
+      if (e.target === modal) {
+        modal.classList.remove("remove"); // 保險起見
+        modal.classList.remove("show");
+      }
+    });
+  } else {
+    console.error("找不到 Modal 或關閉按鈕元件，請確認 HTML 中的 ID 是否正確。");
+  }
+});
+
+
 
 // ==========================================
 // 10. 頁面載入完成啟動

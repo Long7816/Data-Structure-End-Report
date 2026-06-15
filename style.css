@@ -1039,3 +1039,148 @@ body {
   font-weight: 600;
 }
 
+/* ==========================================================================
+   地標節點點擊彈出視窗 (Modal) 客製樣式
+   ========================================================================== */
+.landmark-modal {
+  display: none; /* 預設隱藏 */
+  position: fixed;
+  z-index: 999; /* 確保在最頂層 */
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6); /* 半透明科技黑背景 */
+  backdrop-filter: blur(4px); /* 磨砂玻璃濾鏡 */
+  justify-content: center;
+  align-items: center;
+  transition: opacity 0.3s ease;
+}
+
+/* 顯示時切換的 class */
+.landmark-modal.show {
+  display: flex;
+}
+
+.landmark-modal-content {
+  background: var(--surface-color, #ffffff);
+  border: 1px solid var(--border-light, rgba(0, 0, 0, 0.1));
+  border-radius: var(--radius-md, 12px);
+  width: 90%;
+  max-width: 400px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  position: relative;
+  animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--text-muted, #999);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.modal-close-btn:hover {
+  color: var(--error-color, #ff4d4f);
+}
+
+.modal-title {
+  font-family: var(--font-headline, sans-serif);
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  color: var(--purple-color, #2ecc71); /* 保持主題色一致 */
+  border-bottom: 2px solid var(--border-light, #f0f0f0);
+  padding-bottom: 8px;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover; /* 保持比例裁剪 */
+  border-radius: var(--radius-sm, 6px);
+  background-color: #1e1e1e;
+  border: 1px solid var(--border-light, rgba(0,0,0,0.05));
+}
+
+.modal-desc {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary, #666);
+  margin: 0;
+}
+
+/* ==========================================================================
+   🎯 徹底修復：將即時 Hash Map 觀測框穩定固定在畫面右側，防止滑鼠閃動
+   ========================================================================== */
+#hash-map-inspector {
+  position: absolute !important;   /* 強制改為相對於右側面板固定 */
+  top: auto !important;           /* 取消滑鼠 Y 軸動態干擾 */
+  left: auto !important;          /* 取消滑鼠 X 軸動態干擾 */
+  
+  /* 🌟 最關鍵的一行：讓滑鼠事件直接穿透它！ */
+  /* 這樣即使它不小心碰到滑鼠，滑鼠也像穿過幽靈一樣，能 100% 精準點到地標圓點 */
+  pointer-events: none !important; 
+  
+  /* 保持你原本極具質感的科技暗色調 */
+  background: #1e1e1e !important;
+  border: 1px solid rgba(46, 204, 113, 0.2) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* 確保觀測框裡面的程式碼字體與排版依然正常 */
+#hash-map-inspector pre {
+  margin: 0;
+  pointer-events: none; /* 內部元件同步穿透 */
+}
+
+/* ==========================================================================
+   🔥 終極大絕招：彻底修復滑鼠移至地標會頻閃、點不到地標的問題
+   ========================================================================== */
+
+/* 1. 讓所有可能跟隨滑鼠的動態觀測提示框、Tooltip、JSON 浮動框，全部變成「幽靈狀態」 */
+/* 這樣滑鼠在點擊地標圓點時，會 100% 直接穿透過去，絕對不會觸發「離開節點」的誤判，地標點就會極度穩定！ */
+#node-tooltip, 
+.node-tooltip, 
+#edge-tooltip, 
+.edge-tooltip, 
+.live-inspector-floating, 
+[id*="tooltip"], 
+[class*="tooltip"] {
+  pointer-events: none !important; /* 🔥 最關鍵：強制滑鼠事件直接穿透！ */
+}
+
+/* 2. 如果你的 Hash Map 觀測框（#hash-map-inspector）不小心被 JS 寫入了動態的 top, left 導致跟著滑鼠跑： */
+/* 下面這段會用 !important 強制把它釘死在網頁畫面的固定角落（或固定在右側原本的面板裡），不再跟隨滑鼠晃動 */
+#hash-map-inspector {
+  position: relative !important;   /* 讓它乖乖待在原本右側面板的 Flex 佈局裡 */
+  top: auto !important;            /* 強制覆蓋 JS 的 X 軸位移 */
+  left: auto !important;           /* 強制覆蓋 JS 的 Y 軸位移 */
+  transform: none !important;      /* 防止 JS 用 transform 挪動它 */
+  pointer-events: auto !important; /* 確保在右側面板裡時可以正常的捲動看內文 */
+}
+
+/* 3. 確保地圖上的 SVG 圓點地標，在滑鼠移上去時有最高的點擊權限，且游標會變成手指形狀 */
+.node-group, 
+circle, 
+.youbike-marker, 
+g[data-id] {
+  cursor: pointer !important;
+  pointer-events: auto !important; /* 強制提高地標的滑鼠感應優先級 */
+}
