@@ -71,11 +71,17 @@
             </div>
           </div>
           
-          <!-- 開始導航 CTA -->
-          <button id="navigate-btn" class="btn-primary">
-            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">near_me</span>
-            開始導航
-          </button>
+          <!-- 開始導航 & 演算法演示 CTA -->
+          <div style="display: flex; gap: var(--spacing-sm); margin-top: 10px;">
+            <button id="navigate-btn" class="btn-primary" style="flex: 1.2;">
+              <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">near_me</span>
+              開始導航
+            </button>
+            <button id="algo-demo-btn" class="btn-primary" style="flex: 1; background: transparent; border: 2px solid var(--secondary-color); color: var(--secondary-color); box-shadow: none;">
+              <span class="material-symbols-outlined">play_arrow</span>
+              演算法演示
+            </button>
+          </div>
         </div>
 
         <!-- 天氣與環境模擬 -->
@@ -147,17 +153,28 @@
             <span class="material-symbols-outlined">terminal</span>
             演算法與資料結構解說
           </h2>
-          <div class="glass-card" style="border-left: 4px solid var(--secondary-color); margin-bottom: 0;">
+          <div class="glass-card" style="border-left: 4px solid var(--primary-color); margin-bottom: 0; padding: var(--spacing-sm);">
             <div class="monitor-row">
               <span>Hash Map 狀態查詢</span>
               <span class="monitor-value">O(1)</span>
             </div>
             <div class="monitor-row">
-              <span>Dijkstra 路權運算</span>
+              <span>Dijkstra / A* 尋路</span>
               <span class="monitor-value">O((V+E) log V)</span>
             </div>
-            <div class="monitor-bar">
-              <div class="monitor-bar-fill"></div>
+
+            <!-- Min-Heap Priority Queue Inspector -->
+            <div style="margin-top: 10px;">
+              <span class="input-label" style="margin-bottom: 4px;">Min-Heap 優先佇列狀態</span>
+              <div id="min-heap-inspector" style="background: rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.05); border-radius: var(--radius-sm); padding: 8px; font-family: var(--font-mono); font-size: 11px; max-height: 80px; overflow-y: auto; color: var(--purple-color); line-height: 1.4;">
+                Queue = []
+              </div>
+            </div>
+
+            <!-- Hash Map Live Inspector -->
+            <div style="margin-top: 10px;">
+              <span class="input-label" style="margin-bottom: 4px;">Hash Map Live Inspector (Hover)</span>
+              <pre id="hash-map-inspector" style="background: #1e1e1e; color: #a9ff9b; border-radius: var(--radius-sm); padding: 8px; font-family: var(--font-mono); font-size: 10.5px; overflow-x: auto; margin: 0; max-height: 100px; overflow-y: auto; white-space: pre-wrap; word-break: break-all;">Hover over node/edge to inspect...</pre>
             </div>
             
             <!-- 動態說明的容器 -->
@@ -221,29 +238,44 @@
         <g id="youbike-group"></g>
       </svg>
 
-      <!-- 地圖浮動統計數據卡 -->
-      <div id="floating-card" class="map-floating-card">
-        <div class="floating-stat-group">
-          <span class="floating-stat-label">預估抵達時間</span>
-          <span id="stat-time" class="floating-stat-value">-- 分鐘</span>
-        </div>
+      <!-- 雙路徑指標對比面板 (Dual-Path Metrics Comparison Panel) -->
+      <div id="comparison-card" class="map-floating-card" style="display: flex; flex-direction: column; gap: 8px; width: 330px; border-left: 4px solid var(--primary-color); padding: var(--spacing-sm) var(--spacing-md);">
+        <h4 style="font-family: var(--font-headline); font-size: 12px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; display: flex; align-items: center; gap: 6px;">
+          <span class="material-symbols-outlined text-[16px]">compare_arrows</span>
+          雙路徑指標對比 (Route Metrics)
+        </h4>
         
-        <div class="floating-divider"></div>
-        
-        <div class="floating-icon-stats">
-          <!-- 高溫曝曬統計 -->
-          <div id="stat-item-sun" class="icon-stat-item" data-type="sun">
-            <span class="icon">sunny</span>
-            <span class="icon-stat-text">0%</span>
-            <span class="icon-stat-sub">路徑曝曬</span>
-          </div>
-          <!-- 下雨淋雨統計 -->
-          <div id="stat-item-rain" class="icon-stat-item" data-type="rain">
-            <span class="icon">water_drop</span>
-            <span class="icon-stat-text">0%</span>
-            <span class="icon-stat-sub">路徑淋雨</span>
-          </div>
-        </div>
+        <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: left;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--border-light); color: var(--text-muted); font-size: 10px;">
+              <th style="padding: 4px 0;">指標 Metric</th>
+              <th style="padding: 4px 4px; color: var(--error-color);">原始最快</th>
+              <th style="padding: 4px 0; color: var(--primary-color); text-align: right;">幸福優化</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom: 1px dashed var(--border-light);">
+              <td style="padding: 5px 0; font-weight: 500;">⏱️ 預估時間</td>
+              <td id="comp-orig-time" style="padding: 5px 4px; color: var(--text-secondary);">-- 分鐘</td>
+              <td id="comp-happy-time" style="padding: 5px 0; font-weight: bold; color: var(--primary-color); text-align: right;">-- 分鐘</td>
+            </tr>
+            <tr style="border-bottom: 1px dashed var(--border-light);">
+              <td style="padding: 5px 0; font-weight: 500;">🌳 樹蔭避曬</td>
+              <td id="comp-orig-sun" style="padding: 5px 4px; color: var(--text-secondary);">--</td>
+              <td id="comp-happy-sun" style="padding: 5px 0; font-weight: bold; color: var(--secondary-color); text-align: right;">--</td>
+            </tr>
+            <tr style="border-bottom: 1px dashed var(--border-light);">
+              <td style="padding: 5px 0; font-weight: 500;">☔ 走廊雨遮</td>
+              <td id="comp-orig-rain" style="padding: 5px 4px; color: var(--text-secondary);">--</td>
+              <td id="comp-happy-rain" style="padding: 5px 0; font-weight: bold; color: var(--secondary-color); text-align: right;">--</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 0; font-weight: 500;">🚲 YouBike 風險</td>
+              <td id="comp-orig-bike" style="padding: 5px 4px; color: var(--text-secondary);">--</td>
+              <td id="comp-happy-bike" style="padding: 5px 0; font-weight: bold; color: var(--primary-color); text-align: right;">--</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       <!-- 自訂 Toast 提示 (防呆用) -->

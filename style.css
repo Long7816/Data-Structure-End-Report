@@ -9,27 +9,30 @@
 /* 全域變數與設計系統 Token */
 :root {
   /* 顏色 Token */
-  --bg-color: #0c1609;              /* 深黑綠背景色 */
-  --surface-color: #121e0e;         /* 面板背景底色 */
-  --surface-glass: rgba(18, 30, 14, 0.65); /* 磨砂玻璃背景色 */
-  --border-light: rgba(255, 255, 255, 0.08); /* 細白邊框 */
+  --bg-color: #f8f9fa;              /* 淺灰白色背景 */
+  --surface-color: #ffffff;         /* 面板背景底色 */
+  --surface-glass: rgba(255, 255, 255, 0.85); /* 磨砂玻璃背景色 */
+  --border-light: rgba(0, 0, 0, 0.05); /* 細灰邊框 */
   
-  --primary-color: #79ff5b;         /* 螢光綠 (最快/幸福路徑) */
-  --primary-glow: rgba(121, 255, 91, 0.35);
+  --primary-color: #2ecc71;         /* 螢光綠 (最快/幸福路徑) */
+  --primary-glow: rgba(46, 204, 113, 0.25);
   
-  --secondary-color: #00bdfd;       /* 天藍色 (輔助路線/資訊) */
-  --secondary-glow: rgba(0, 189, 253, 0.35);
+  --secondary-color: #3498db;       /* 天藍色 (輔助路線/資訊) */
+  --secondary-glow: rgba(52, 152, 219, 0.25);
   
-  --accent-color: #ff8c00;          /* 亮橘色 (高溫/警示) */
-  --accent-glow: rgba(255, 140, 0, 0.35);
+  --accent-color: #f1c40f;          /* 亮橘色 (高溫/警示) */
+  --accent-glow: rgba(241, 196, 15, 0.25);
 
-  --error-color: #ffb4ab;           /* 淺紅粉色 (YouBike警告/打滑) */
-  --error-glow: rgba(255, 180, 171, 0.4);
+  --error-color: #e74c3c;           /* 亮紅色 (重罰/危險) */
+  --error-glow: rgba(231, 76, 60, 0.25);
+
+  --purple-color: #9b59b6;          /* 紫色 (優先佇列/搜尋狀態) */
+  --purple-glow: rgba(155, 89, 182, 0.25);
   
-  --text-primary: #dae6d0;          /* 主文字 */
-  --text-secondary: #baccb0;        /* 次文字 */
-  --text-muted: #6f7f6a;            /* 隱藏/說明文字 */
-  --text-dark: #053900;             /* 深色對比字 (用在螢光綠背景上) */
+  --text-primary: #191c1d;          /* 主文字 */
+  --text-secondary: #3d4a3e;        /* 次文字 */
+  --text-muted: #6c7b6d;            /* 隱藏/說明文字 */
+  --text-dark: #ffffff;             /* 對比字 (用在綠色背景上) */
 
   /* 字型 */
   --font-headline: 'Montserrat', sans-serif;
@@ -37,7 +40,7 @@
   --font-mono: 'Fira Code', monospace;
 
   /* 圓角 */
-  --radius-sm: 6px;
+  --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-full: 9999px;
@@ -76,7 +79,7 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 0 var(--spacing-lg);
-  background: rgba(12, 22, 9, 0.85);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border-light);
@@ -152,7 +155,7 @@ body {
   display: flex;
   flex-direction: column;
   z-index: 40;
-  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
+  box-shadow: 5px 0 20px rgba(0, 0, 0, 0.03);
   transition: transform 0.3s ease;
 }
 
@@ -191,17 +194,18 @@ body {
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.7);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-md);
   padding: var(--spacing-md);
   margin-bottom: var(--spacing-lg);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-card:focus-within {
   border-color: var(--primary-color);
-  box-shadow: 0 0 15px rgba(121, 255, 91, 0.15);
+  box-shadow: 0 0 15px rgba(46, 204, 113, 0.15);
 }
 
 /* 輸入框與下拉選單 */
@@ -227,8 +231,8 @@ body {
 
 .select-input {
   width: 100%;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
   font-family: var(--font-body);
@@ -243,7 +247,7 @@ body {
 
 .select-input:focus {
   border-color: var(--primary-color);
-  box-shadow: 0 0 10px rgba(121, 255, 91, 0.1);
+  box-shadow: 0 0 10px rgba(46, 204, 113, 0.1);
 }
 
 .select-wrapper::after {
@@ -324,11 +328,12 @@ body {
 }
 
 .scenario-card {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--border-light);
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.04);
   border-radius: var(--radius-md);
   padding: var(--spacing-sm);
   cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.01);
   transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
@@ -336,32 +341,32 @@ body {
 }
 
 .scenario-card:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.02);
   border-color: var(--text-secondary);
 }
 
 .scenario-card.active {
-  background: rgba(121, 255, 91, 0.05);
+  background: rgba(46, 204, 113, 0.06);
   border-color: var(--primary-color);
-  box-shadow: 0 0 10px rgba(121, 255, 91, 0.15);
+  box-shadow: 0 0 10px rgba(46, 204, 113, 0.1);
 }
 
 .scenario-card.active[data-scenario="rain"] {
-  background: rgba(0, 189, 253, 0.05);
+  background: rgba(52, 152, 219, 0.06);
   border-color: var(--secondary-color);
-  box-shadow: 0 0 10px rgba(0, 189, 253, 0.15);
+  box-shadow: 0 0 10px rgba(52, 152, 219, 0.1);
 }
 
 .scenario-card.active[data-scenario="heat"] {
-  background: rgba(255, 140, 0, 0.05);
+  background: rgba(241, 196, 15, 0.06);
   border-color: var(--accent-color);
-  box-shadow: 0 0 10px rgba(255, 140, 0, 0.15);
+  box-shadow: 0 0 10px rgba(241, 196, 15, 0.1);
 }
 
 .scenario-card.active[data-scenario="pollution"] {
-  background: rgba(255, 180, 171, 0.05);
+  background: rgba(231, 76, 60, 0.06);
   border-color: var(--error-color);
-  box-shadow: 0 0 10px rgba(255, 180, 171, 0.15);
+  box-shadow: 0 0 10px rgba(231, 76, 60, 0.1);
 }
 
 .scenario-emoji {
@@ -387,8 +392,8 @@ body {
 }
 
 .mode-tab {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border-light);
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.05);
   border-radius: var(--radius-full);
   padding: 8px 14px;
   font-size: 12px;
@@ -407,11 +412,10 @@ body {
 }
 
 .mode-tab.active {
-  background: rgba(121, 255, 91, 0.1);
+  background: rgba(46, 204, 113, 0.1);
   border-color: var(--primary-color);
   color: var(--primary-color);
-  box-shadow: inset 0 0 8px rgba(121, 255, 91, 0.15);
-  text-shadow: 0 0 5px var(--primary-glow);
+  box-shadow: inset 0 0 8px rgba(46, 204, 113, 0.15);
 }
 
 /* 演算法監控面板 */
@@ -461,11 +465,30 @@ body {
   flex: 1;
   height: 100%;
   position: relative;
-  background-color: #080f06;
+  background-color: #f8f9fa;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  transition: background 0.6s ease;
+}
+
+/* Dynamic ambient backgrounds based on scenario */
+.map-canvas.normal {
+  background: radial-gradient(circle at top right, rgba(52, 152, 219, 0.06), transparent 50%),
+              radial-gradient(circle at bottom left, rgba(46, 204, 113, 0.04), transparent 50%);
+}
+.map-canvas.heat {
+  background: radial-gradient(circle at center, rgba(241, 196, 15, 0.07), transparent 70%);
+}
+.map-canvas.rain {
+  background: radial-gradient(circle at center, rgba(52, 152, 219, 0.07), transparent 70%);
+}
+.map-canvas.pollution {
+  background: radial-gradient(circle at center, rgba(108, 123, 109, 0.07), transparent 70%);
+}
+.map-canvas.youbike_clog {
+  background: radial-gradient(circle at center, rgba(155, 89, 182, 0.05), transparent 70%);
 }
 
 /* 網格網線背景 */
@@ -473,9 +496,9 @@ body {
   position: absolute;
   inset: 0;
   background-image: 
-    radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.08) 1.5px, transparent 0),
-    linear-gradient(rgba(255, 255, 255, 0.01) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.01) 1px, transparent 1px);
+    radial-gradient(circle at 2px 2px, rgba(0, 0, 0, 0.04) 1.5px, transparent 0),
+    linear-gradient(rgba(0, 0, 0, 0.005) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.005) 1px, transparent 1px);
   background-size: 30px 30px, 150px 150px, 150px 150px;
   pointer-events: none;
 }
@@ -492,14 +515,14 @@ body {
 
 /* 地圖實體：道路 */
 .edge-line {
-  stroke: #21321b;
+  stroke: #e2e8f0;
   stroke-width: 4px;
   stroke-linecap: round;
   transition: all 0.3s ease;
 }
 
 .edge-line.active-segment {
-  stroke: #2f4928;
+  stroke: #cbd5e1;
 }
 
 /* 遮雨與遮蔭特徵點標記 (點綴用) */
@@ -556,30 +579,30 @@ body {
 }
 
 .node-circle {
-  fill: #162911;
-  stroke: var(--text-muted);
-  stroke-width: 2px;
+  fill: #ffffff;
+  stroke: #cbd5e1;
+  stroke-width: 2.5px;
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .node-group:hover .node-circle {
   transform: scale(1.3);
-  stroke: var(--text-primary);
-  fill: #223c1b;
+  stroke: var(--primary-color);
+  fill: #e8fbf0;
 }
 
 /* 特殊節點樣式 */
 .node-transit .node-circle {
   stroke: var(--secondary-color);
-  fill: #0c202a;
+  fill: #f0f8ff;
 }
 .node-dorm .node-circle {
-  stroke: #c887ff;
-  fill: #211130;
+  stroke: var(--purple-color);
+  fill: #faf5ff;
 }
 .node-building .node-circle {
-  stroke: #ffda73;
-  fill: #2f250a;
+  stroke: #f1c40f;
+  fill: #fffdf0;
 }
 
 /* 起終點動態高亮 */
@@ -622,10 +645,10 @@ body {
 }
 
 .youbike-bg {
-  fill: rgba(12, 22, 9, 0.9);
+  fill: rgba(255, 255, 255, 0.95);
   stroke: var(--primary-color);
   stroke-width: 1.5px;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.06));
 }
 
 .youbike-icon {
@@ -866,3 +889,32 @@ body {
   background: var(--primary-color);
   box-shadow: 0 0 6px var(--primary-glow);
 }
+
+/* Step-Run Pathfinding Visualizer Search States */
+.node-group.visiting .node-circle,
+.youbike-marker.visiting .youbike-bg {
+  fill: #df98fa !important;
+  stroke: #83439e !important;
+  filter: drop-shadow(0 0 8px rgba(223, 152, 250, 0.8)) !important;
+  transform: scale(1.25);
+}
+
+.node-group.visited .node-circle,
+.youbike-marker.visited .youbike-bg {
+  fill: #cce5ff !important;
+  stroke: #3498db !important;
+  opacity: 0.8;
+}
+
+.edge-line.exploring {
+  stroke: #3498db !important;
+  stroke-dasharray: 4, 4;
+  animation: edge-dash-anim 1s linear infinite;
+}
+
+@keyframes edge-dash-anim {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+

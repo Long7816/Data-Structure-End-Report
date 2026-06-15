@@ -14,6 +14,20 @@ let endNodeId = "building_science";     // 預設終點 (科研大樓)
 let youbikeHashMap = {};    // 儲存 YouBike 站點車位狀態
 let edgeWeightHashMap = {}; // 儲存邊的動態加權 (Penalty) 乘數
 
+// 演算法演示模擬狀態
+let simState = {
+  active: false,
+  timer: null,
+  distances: {},
+  previous: {},
+  visited: new Set(),
+  queue: [],
+  start: "",
+  target: "",
+  isBiking: false,
+  finishing: false
+};
+
 // ==========================================
 // 2. 初始化與動態 Hash Map 更新
 // ==========================================
@@ -425,11 +439,13 @@ function setupEventListeners() {
   // 1. 起終點選擇改變
   document.getElementById("start-select").addEventListener("change", (e) => {
     startNodeId = e.target.value;
+    stopAlgoDemo();
     calculateAndRenderRoutes();
   });
 
   document.getElementById("end-select").addEventListener("change", (e) => {
     endNodeId = e.target.value;
+    stopAlgoDemo();
     calculateAndRenderRoutes();
   });
 
@@ -439,6 +455,8 @@ function setupEventListeners() {
     const temp = startNodeId;
     startNodeId = endNodeId;
     endNodeId = temp;
+    
+    stopAlgoDemo();
     
     // 重建選單選項，使下拉選單能接受混雜狀態
     ensureHybridOptions();
@@ -453,6 +471,7 @@ function setupEventListeners() {
   document.querySelectorAll(".scenario-card").forEach(card => {
     card.addEventListener("click", () => {
       const scenarioId = card.getAttribute("data-scenario");
+      stopAlgoDemo();
       switchScenario(scenarioId);
     });
   });
@@ -464,6 +483,7 @@ function setupEventListeners() {
       tab.classList.add("active");
       currentModeId = tab.getAttribute("data-mode");
       
+      stopAlgoDemo();
       updateDynamicHashMap();
       calculateAndRenderRoutes();
     });
@@ -474,13 +494,29 @@ function setupEventListeners() {
     const startVal = document.getElementById("start-select").value;
     const endVal = document.getElementById("end-select").value;
     
+    stopAlgoDemo();
+    
     if (!startVal || !endVal || startVal === endVal) {
       showToast("⚠️ 請選擇相異的起點與目的地！");
       return;
     }
 
     showToast("🚀 動態路徑規劃成功！導航開始...");
+    calculateAndRenderRoutes();
   });
+
+  // 6. 演算法演示按鈕
+  const demoBtn = document.getElementById("algo-demo-btn");
+  if (demoBtn) {
+    demoBtn.addEventListener("click", () => {
+      if (simState.active) {
+        stopAlgoDemo();
+        calculateAndRenderRoutes();
+      } else {
+        startAlgoDemo();
+      }
+    });
+  }
 }
 
 function ensureHybridOptions() {
@@ -535,6 +571,12 @@ function switchScenario(scenarioId) {
       card.classList.remove("active");
     }
   });
+
+  // 更新地圖 canvas 容器的背景 Class (天氣深淺連動)
+  const mapCanvas = document.querySelector(".map-canvas");
+  if (mapCanvas) {
+    mapCanvas.className = "map-canvas " + scenarioId;
+  }
 
   // 更新動態 Hash Map
   updateDynamicHashMap();
@@ -607,6 +649,8 @@ function renderMap() {
       line.setAttribute("y1", n1.y);
       line.setAttribute("x2", n2.x);
       line.setAttribute("y2", n2.y);
+      line.addEventListener("mouseenter", () => showEdgeInspector(edge.id));
+      line.addEventListener("mouseleave", () => resetInspector());
       edgesGroup.appendChild(line);
 
       // 如果有雨遮，在上面繪製細虛線表示
@@ -647,6 +691,8 @@ function renderMap() {
       group.setAttribute("class", `node-group node-${node.type}`);
       group.setAttribute("data-id", node.id);
       group.addEventListener("click", () => handleNodeClick(node.id));
+      group.addEventListener("mouseenter", () => showNodeInspector(node.id));
+      group.addEventListener("mouseleave", () => resetInspector());
 
       const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
       circle.setAttribute("class", "node-circle");
@@ -672,9 +718,6 @@ function renderMap() {
   renderYouBikeMarkers();
 }
 
-/**
- * 渲染 YouBike 圖標，並根據庫存狀態套用呼吸警告效果
- */
 function renderYouBikeMarkers() {
   const youbikeGroup = document.getElementById("youbike-group");
   if (!youbikeGroup) return;
@@ -692,6 +735,8 @@ function renderYouBikeMarkers() {
     marker.setAttribute("class", `youbike-marker ${isWarning ? 'warning' : ''}`);
     marker.setAttribute("data-id", node.id);
     marker.addEventListener("click", () => handleNodeClick(node.id));
+    marker.addEventListener("mouseenter", () => showNodeInspector(node.id));
+    marker.addEventListener("mouseleave", () => resetInspector());
 
     // 背景圈
     const bg = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -751,10 +796,15 @@ function handleNodeClick(nodeId) {
 function calculateAndRenderRoutes() {
   if (!startNodeId || !endNodeId || startNodeId === endNodeId) return;
 
+  // 如果演算法演示模擬正在執行中，且不是由模擬結束或正在渲染觸發的，則重置它
+  if (simState.active && !simState.finishing) {
+    stopAlgoDemo();
+  }
+
   // 1. 高亮起點與終點節點
   document.querySelectorAll(".node-group, .youbike-marker").forEach(g => {
     const id = g.getAttribute("data-id");
-    g.classList.remove("node-origin", "node-destination");
+    g.classList.remove("node-origin", "node-destination", "visiting", "visited");
     if (id === startNodeId) {
       g.classList.add("node-origin");
     } else if (id === endNodeId) {
@@ -823,10 +873,13 @@ function calculateAndRenderRoutes() {
     }
   }
 
-  // 5. 更新地圖道路的基礎高亮 (屬於幸福路線的道路稍微增亮)
+  // 5. 更新地圖道路的基礎高亮與動態邊權重 (邊寬度/顏色隨罰值變化)
+  updateMapEdgesVisuals();
+  
   CAMPUS_EDGES.forEach(edge => {
     const line = document.getElementById(`svg-edge-${edge.id}`);
     if (line) {
+      line.classList.remove("exploring");
       if (isEdgeInPath(edge, happyResult.path)) {
         line.classList.add("active-segment");
       } else {
@@ -835,40 +888,53 @@ function calculateAndRenderRoutes() {
     }
   });
 
-  // 6. 統計數據更新 (右下角浮動統計卡)
+  // 6. 統計數據更新 (雙路徑指標對比)
   const isBikingActive = (currentModeId === "bike");
-  const stats = analyzeRoute(happyResult.path, isBikingActive);
+  const statsHappy = analyzeRoute(happyResult.path, isBikingActive);
+  const statsOrig = analyzeRoute(originalResult.path, isBikingActive);
   
-  document.getElementById("stat-time").textContent = `${stats.time} 分鐘`;
+  // 更新時間
+  document.getElementById("comp-orig-time").textContent = `${statsOrig.time} 分鐘 (${statsOrig.distance}m)`;
+  document.getElementById("comp-happy-time").textContent = `${statsHappy.time} 分鐘 (${statsHappy.distance}m)`;
   
-  const statSun = document.getElementById("stat-item-sun");
-  const statRain = document.getElementById("stat-item-rain");
+  // 樹蔭避曬 %
+  document.getElementById("comp-orig-sun").textContent = `${100 - statsOrig.exposure}% 遮蔭`;
+  document.getElementById("comp-happy-sun").textContent = `${100 - statsHappy.exposure}% 遮蔭`;
+  
+  // 走廊雨遮 %
+  document.getElementById("comp-orig-rain").textContent = `${100 - statsOrig.rain}% 雨遮`;
+  document.getElementById("comp-happy-rain").textContent = `${100 - statsHappy.rain}% 雨遮`;
 
-  if (statSun && statRain) {
-    const scenario = ENVIRONMENTAL_SCENARIOS[currentScenarioId];
+  // YouBike 風險
+  let origRisk = "無風險";
+  let happyRisk = "無風險";
+  
+  if (currentModeId === "bike") {
+    const origStart = originalResult.startStationId;
+    const origDest = originalResult.destStationId;
+    const origStartState = youbikeHashMap[origStart] || { bikes: 10, docks: 15 };
+    const origDestState = youbikeHashMap[origDest] || { bikes: 10, docks: 15 };
     
-    // 高溫情境下顯示曝曬度
-    if (scenario.weather.condition === "heat") {
-      statSun.classList.add("active");
-      statSun.querySelector(".icon-stat-text").textContent = `${stats.exposure}%`;
-      statRain.classList.remove("active");
-      statRain.querySelector(".icon-stat-text").textContent = "0%";
-    } 
-    // 雨天情境下顯示淋雨率
-    else if (scenario.weather.condition === "heavy_rain") {
-      statRain.classList.add("active");
-      statRain.querySelector(".icon-stat-text").textContent = `${stats.rain}%`;
-      statSun.classList.remove("active");
-      statSun.querySelector(".icon-stat-text").textContent = "0%";
-    } 
-    // 其他正常/空污情境下
-    else {
-      statSun.classList.remove("active");
-      statRain.classList.remove("active");
-      statSun.querySelector(".icon-stat-text").textContent = "0%";
-      statRain.querySelector(".icon-stat-text").textContent = "0%";
+    if (origStartState.bikes < 3 || origDestState.docks < 3) {
+      origRisk = "⚠️ 高風險 (車位吃緊)";
+    } else {
+      origRisk = "低風險";
     }
+    
+    const happyStart = happyResult.startStationId;
+    const happyDest = happyResult.destStationId;
+    if (happyStart !== origStart || happyDest !== origDest) {
+      happyRisk = "✓ 已自動繞道避險";
+    } else {
+      happyRisk = "低風險";
+    }
+  } else {
+    origRisk = "--";
+    happyRisk = "無風險 (步行)";
   }
+  
+  document.getElementById("comp-orig-bike").textContent = origRisk;
+  document.getElementById("comp-happy-bike").textContent = happyRisk;
 }
 
 /**
@@ -964,6 +1030,256 @@ function updateAlgorithmExplanation(scenario) {
 }
 
 // ==========================================
-// 9. 頁面載入完成啟動
+// 9. Hover Inspectors & Pathfinding Step-Run
+// ==========================================
+
+function showNodeInspector(nodeId) {
+  const node = CAMPUS_NODES[nodeId];
+  if (!node) return;
+  
+  const state = {
+    id: node.id,
+    name: node.name,
+    type: node.type,
+    coordinates: { x: node.x, y: node.y }
+  };
+  
+  if (node.isYouBike) {
+    const youbikeStatus = youbikeHashMap[nodeId] || { bikes: 0, docks: 0 };
+    state.youbike_status = {
+      availableBikes: youbikeStatus.bikes,
+      availableDocks: youbikeStatus.docks,
+      warningActive: (youbikeStatus.bikes < 3 || youbikeStatus.docks < 3) ? "⚠️ High Risk (< 3)" : "Low Risk"
+    };
+  }
+  
+  document.getElementById("hash-map-inspector").textContent = JSON.stringify(state, null, 2);
+}
+
+function showEdgeInspector(edgeId) {
+  const edge = CAMPUS_EDGES.find(e => e.id === edgeId);
+  if (!edge) return;
+  
+  const state = {
+    id: edge.id,
+    source: CAMPUS_NODES[edge.source]?.name || edge.source,
+    target: CAMPUS_NODES[edge.target]?.name || edge.target,
+    physicalDistance_m: edge.distance,
+    attributes: {
+      hasRoof: edge.hasRoof,
+      hasShade: edge.hasShade,
+      slopeGrade: edge.slope === 1 ? "Flat" : edge.slope === 2 ? "Moderate" : "Steep/Stairs",
+      roadSurface: edge.surface
+    },
+    currentPenaltyFactor: edgeWeightHashMap[edge.id] || 1.0,
+    weightedCost: edge.distance * (edgeWeightHashMap[edge.id] || 1.0)
+  };
+  
+  document.getElementById("hash-map-inspector").textContent = JSON.stringify(state, null, 2);
+}
+
+function resetInspector() {
+  document.getElementById("hash-map-inspector").textContent = "Hover over node/edge to inspect...";
+}
+
+function updateMapEdgesVisuals() {
+  CAMPUS_EDGES.forEach(edge => {
+    const line = document.getElementById(`svg-edge-${edge.id}`);
+    if (!line) return;
+    
+    const penalty = edgeWeightHashMap[edge.id] || 1.0;
+    
+    if (penalty > 3.0) {
+      // 暴雨無雨遮 or 大理石打滑 -> 變粗變紅
+      line.style.stroke = "var(--error-color)";
+      line.style.strokeWidth = "6px";
+    } else if (penalty > 1.5) {
+      // 高溫或中度罰值 -> 變橘黃色
+      line.style.stroke = "var(--accent-color)";
+      line.style.strokeWidth = "5px";
+    } else {
+      // 正常路段
+      line.style.stroke = "";
+      line.style.strokeWidth = "";
+    }
+  });
+}
+
+function startAlgoDemo() {
+  stopAlgoDemo();
+  
+  simState.active = true;
+  simState.start = startNodeId;
+  simState.target = endNodeId;
+  simState.isBiking = (currentModeId === "bike");
+  simState.visited.clear();
+  
+  const demoBtn = document.getElementById("algo-demo-btn");
+  if (demoBtn) {
+    demoBtn.innerHTML = `<span class="material-symbols-outlined">pause</span> 暫停演示`;
+    demoBtn.style.borderColor = "var(--error-color)";
+    demoBtn.style.color = "var(--error-color)";
+  }
+  
+  simState.distances = {};
+  simState.previous = {};
+  simState.queue = [];
+  
+  for (const nodeId in CAMPUS_NODES) {
+    if (nodeId === simState.start) {
+      simState.distances[nodeId] = 0;
+    } else {
+      simState.distances[nodeId] = Infinity;
+    }
+    simState.previous[nodeId] = null;
+    simState.queue.push(nodeId);
+  }
+  
+  document.querySelectorAll(".node-group, .youbike-marker").forEach(g => {
+    g.classList.remove("visiting", "visited", "node-origin", "node-destination");
+    const id = g.getAttribute("data-id");
+    if (id === simState.start) g.classList.add("node-origin");
+    else if (id === simState.target) g.classList.add("node-destination");
+  });
+  
+  document.querySelectorAll(".edge-line").forEach(line => {
+    line.classList.remove("active-segment", "exploring");
+  });
+  
+  document.getElementById("route-happy").setAttribute("opacity", "0");
+  document.getElementById("route-flow").setAttribute("opacity", "0");
+  
+  simState.timer = setInterval(stepAlgoDemo, 400);
+}
+
+function stopAlgoDemo() {
+  if (simState.timer) {
+    clearInterval(simState.timer);
+    simState.timer = null;
+  }
+  simState.active = false;
+  
+  const demoBtn = document.getElementById("algo-demo-btn");
+  if (demoBtn) {
+    demoBtn.innerHTML = `<span class="material-symbols-outlined">play_arrow</span> 演算法演示`;
+    demoBtn.style.borderColor = "var(--secondary-color)";
+    demoBtn.style.color = "var(--secondary-color)";
+  }
+}
+
+function stepAlgoDemo() {
+  if (simState.queue.length === 0) {
+    finishAlgoDemo(false);
+    return;
+  }
+  
+  simState.queue.sort((a, b) => simState.distances[a] - simState.distances[b]);
+  const currNodeId = simState.queue.shift();
+  
+  if (simState.distances[currNodeId] === Infinity) {
+    finishAlgoDemo(false);
+    return;
+  }
+  
+  document.querySelectorAll(".node-group, .youbike-marker").forEach(g => {
+    g.classList.remove("visiting");
+    if (g.getAttribute("data-id") === currNodeId) {
+      g.classList.add("visiting");
+    }
+  });
+  
+  const activeNode = CAMPUS_NODES[currNodeId];
+  document.getElementById("hash-map-inspector").textContent = JSON.stringify({
+    phase: "Algorithm Step-Run Search",
+    currentNode: activeNode.name,
+    minDistance: simState.distances[currNodeId] === Infinity ? "Infinity" : `${simState.distances[currNodeId].toFixed(1)} m`,
+    parentLink: simState.previous[currNodeId] ? CAMPUS_NODES[simState.previous[currNodeId]].name : "None",
+    visitedCount: simState.visited.size
+  }, null, 2);
+  
+  if (currNodeId === simState.target) {
+    finishAlgoDemo(true);
+    return;
+  }
+  
+  const neighbors = getNeighbors(currNodeId);
+  for (const neighborId in neighbors) {
+    const edge = neighbors[neighborId];
+    if (simState.visited.has(neighborId)) continue;
+    
+    const edgeLine = document.getElementById(`svg-edge-${edge.id}`);
+    if (edgeLine) {
+      edgeLine.classList.add("exploring");
+    }
+    
+    const penaltyMultiplier = edgeWeightHashMap[edge.id] || 1.0;
+    let weight = edge.distance * penaltyMultiplier;
+    
+    if (simState.isBiking) {
+      if (edge.slope >= 3) {
+        weight = Infinity;
+      } else {
+        weight = weight / 3.0;
+      }
+    }
+    
+    const alt = simState.distances[currNodeId] + weight;
+    if (alt < simState.distances[neighborId]) {
+      simState.distances[neighborId] = alt;
+      simState.previous[neighborId] = currNodeId;
+    }
+  }
+  
+  simState.visited.add(currNodeId);
+  
+  document.querySelectorAll(".node-group, .youbike-marker").forEach(g => {
+    const id = g.getAttribute("data-id");
+    if (simState.visited.has(id) && id !== simState.start && id !== simState.target) {
+      g.classList.add("visited");
+    }
+  });
+  
+  updateMinHeapPanel();
+}
+
+function updateMinHeapPanel() {
+  const panel = document.getElementById("min-heap-inspector");
+  if (!panel) return;
+  
+  const activeQueue = simState.queue
+    .filter(id => simState.distances[id] < Infinity)
+    .map(id => ({
+      name: CAMPUS_NODES[id].name,
+      dist: simState.distances[id]
+    }))
+    .sort((a, b) => a.dist - b.dist);
+    
+  if (activeQueue.length === 0) {
+    panel.innerHTML = "Queue = [] (Empty)";
+    return;
+  }
+  
+  const listHtml = activeQueue.map((item, idx) => {
+    return `<div style="margin-bottom: 2px;">[${idx}] ${item.name} (${item.dist.toFixed(1)}m)</div>`;
+  }).join("");
+  
+  panel.innerHTML = listHtml;
+}
+
+function finishAlgoDemo(success) {
+  simState.finishing = true;
+  stopAlgoDemo();
+  
+  if (success) {
+    showToast("🎉 演算法演練成功！已抵達目的地。");
+    calculateAndRenderRoutes();
+  } else {
+    showToast("⚠️ 演算法演示結束，無法找到可行路徑。");
+  }
+  simState.finishing = false;
+}
+
+// ==========================================
+// 10. 頁面載入完成啟動
 // ==========================================
 window.addEventListener("DOMContentLoaded", initSystem);
