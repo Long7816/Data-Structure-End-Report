@@ -919,7 +919,7 @@ body {
 }
 
 /* ==========================================================================
-   多分頁切換與 UI 升級樣式
+   多分頁切換與 UI 升級樣式 (無大眾運輸看板)
    ========================================================================== */
 
 /* 頂部頁籤按鈕樣式 */
@@ -1024,107 +1024,7 @@ body {
   box-shadow: 0 4px 10px rgba(231, 76, 60, 0.25);
 }
 
-/* ==========================================================================
-   大眾運輸看板 (Transit Hub) 專屬樣式
-   ========================================================================== */
-.transit-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: var(--spacing-md);
-  margin-top: var(--spacing-md);
-}
-
-.transit-card {
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-md);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-  border-top: 4px solid var(--border-light);
-}
-
-.transit-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
-}
-
-.transit-card.highlight-mrt {
-  border-top-color: var(--secondary-color);
-}
-
-.transit-card.highlight-bus {
-  border-top-color: var(--accent-color);
-}
-
-.transit-card-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.transit-time-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 14px;
-  border-radius: var(--radius-sm);
-  background: rgba(0, 0, 0, 0.02);
-  border: 1px solid rgba(0, 0, 0, 0.01);
-}
-
-.transit-time-label {
-  font-size: 12px;
-  color: var(--text-secondary);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.transit-time-value {
-  font-family: var(--font-headline);
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--text-primary);
-}
-
-.transit-time-value.urgent {
-  color: var(--error-color);
-  animation: transit-blink 1.5s infinite ease-in-out;
-}
-
-@keyframes transit-blink {
-  0%, 100% { opacity: 1; filter: drop-shadow(0 0 2px rgba(231, 76, 60, 0.2)); }
-  50% { opacity: 0.5; }
-}
-
-.transit-penalty-badge {
-  font-size: 10px;
-  padding: 3px 8px;
-  border-radius: var(--radius-full);
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.transit-penalty-badge.low {
-  background: rgba(46, 204, 113, 0.1);
-  color: var(--primary-color);
-}
-
-.transit-penalty-badge.high {
-  background: rgba(231, 76, 60, 0.1);
-  color: var(--error-color);
-}
-
-/* ==========================================================================
-   演算法觀測後台 (DS Backstage) 專屬樣式
-   ========================================================================== */
+/* 演算法觀測後台專屬樣式 */
 #backstage-page {
   background-color: #fcfdfe;
 }
@@ -1138,5 +1038,4 @@ body {
   font-family: var(--font-mono);
   font-weight: 600;
 }
-
 

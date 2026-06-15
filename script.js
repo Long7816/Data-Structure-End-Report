@@ -10,19 +10,15 @@ let currentModeId = "fastest";     // 預設最快
 let startNodeId = "youbike_xinsheng_4"; // 預設起點 (忠孝新生4號出口)
 let endNodeId = "building_science";     // 預設終點 (科研大樓)
 
+// 大眾運輸到站等待時間的 Hash Map (模擬即時轉乘等待分鐘數，用於 Dijkstra 動態處罰)
+let transitArrivalHashMap = {
+  "bus_station_main_gate": { bus_green11: 1, bus_236: 4 },
+  "mrt_gongguan_exit3": { next_train: 2 }
+};
+
 // 動態資料結構：使用 JavaScript Object 作為 Hash Map，提供 O(1) 的查詢與更新
 let youbikeHashMap = {};    // 儲存 YouBike 站點車位狀態
 let edgeWeightHashMap = {}; // 儲存邊的動態加權 (Penalty) 乘數
-
-// 大眾運輸到站等待時間的 Hash Map (模擬即時轉乘等待分鐘數，用於 Dijkstra 動態處罰)
-let transitArrivalHashMap = {
-  "youbike_xinsheng_4": { mrt: 2, bus: 5 },
-  "youbike_xinsheng_3": { mrt: 4, bus: 8 },
-  "youbike_xinsheng_1": { mrt: 7, bus: 1 },
-  "youbike_guanghua": { mrt: 10, bus: 4 },
-  "youbike_ee": { mrt: 12, bus: 3 },
-  "youbike_bade": { mrt: 15, bus: 9 }
-};
 
 // 演算法演示模擬狀態
 let simState = {
@@ -42,10 +38,16 @@ let simState = {
 // 2. 初始化與動態 Hash Map 更新
 // ==========================================
 function initSystem() {
+  // 防呆機制：確保 campusGraph.js 資料已載入
+  if (typeof CAMPUS_NODES === 'undefined' || typeof CAMPUS_EDGES === 'undefined') {
+      console.error("錯誤：未成功載入 campusGraph.js 的路網資料！");
+      return;
+  }
+
   // 初始化下拉選單
   populateSelectors();
   
-  // 根據預設起點更新轉乘到站時間
+  // 根據起點更新大眾運輸 wait times
   updateTransitArrivalTimes(startNodeId);
   
   // 載入預設情境
@@ -65,18 +67,23 @@ function initSystem() {
  * 根據起點位置與各轉乘站點的直線距離，動態模擬到站時間 (Wait Times)
  */
 function updateTransitArrivalTimes(startNode) {
+  if (typeof CAMPUS_NODES === 'undefined' || typeof CAMPUS_EDGES === 'undefined') {
+      console.error("錯誤：未成功載入 campusGraph.js 的路網資料！");
+      return;
+  }
   const startCoord = CAMPUS_NODES[startNode];
   if (!startCoord) return;
   
-  for (const stationId in transitArrivalHashMap) {
-    const stationCoord = CAMPUS_NODES[stationId];
-    if (!stationCoord) continue;
-    
-    const dist = getStraightLineDistance(startCoord, stationCoord);
-    // 用距離與固定除數模擬出到站時間，使其在不同起點時有機地改變
-    const seed = Math.floor(dist / 40);
-    transitArrivalHashMap[stationId].mrt = Math.max(1, (seed * 2) % 12 + 1);
-    transitArrivalHashMap[stationId].bus = Math.max(1, (seed * 3) % 18 + 1);
+  // 模擬 mrt_gongguan_exit3 捷運等待時間 (3~12分)
+  const seedMrt = startCoord.x + startCoord.y;
+  if (transitArrivalHashMap["mrt_gongguan_exit3"]) {
+    transitArrivalHashMap["mrt_gongguan_exit3"].next_train = Math.max(1, Math.floor((seedMrt / 80) % 10) + 2);
+  }
+  
+  // 模擬 bus_station_main_gate 班次等待時間
+  if (transitArrivalHashMap["bus_station_main_gate"]) {
+    transitArrivalHashMap["bus_station_main_gate"].bus_green11 = Math.max(1, Math.floor((seedMrt / 60) % 8) + 1);
+    transitArrivalHashMap["bus_station_main_gate"].bus_236 = Math.max(1, Math.floor((seedMrt / 40) % 12) + 3);
   }
 }
 
@@ -84,6 +91,15 @@ function updateTransitArrivalTimes(startNode) {
  * 更新環境變數與 YouBike 狀態的 Hash Map (時間複雜度：O(E) 預先計算，Dijkstra 查詢時為 O(1))
  */
 function updateDynamicHashMap() {
+  if (typeof CAMPUS_NODES === 'undefined' || typeof CAMPUS_EDGES === 'undefined') {
+      console.error("錯誤：未成功載入 campusGraph.js 的路網資料！");
+      return;
+  }
+  if (typeof ENVIRONMENTAL_SCENARIOS === 'undefined') {
+      console.error("錯誤：未成功載入 disasterScenario.js 的情境資料！");
+      return;
+  }
+  
   const scenario = ENVIRONMENTAL_SCENARIOS[currentScenarioId];
   
   // 更新 YouBike 站點 Hash Map，複製模擬狀態
@@ -135,13 +151,25 @@ function updateDynamicHashMap() {
     // 騎車轉乘模式 (bike)：如果邊的任一端點是轉乘站，則加上該站的大眾運輸到站等待時間懲罰 (Wait Penalty)
     if (currentModeId === "bike") {
       let waitTime = 0;
-      if (transitArrivalHashMap[edge.source]) {
-        const data = transitArrivalHashMap[edge.source];
-        waitTime = Math.min(data.mrt, data.bus);
-      } else if (transitArrivalHashMap[edge.target]) {
-        const data = transitArrivalHashMap[edge.target];
-        waitTime = Math.min(data.mrt, data.bus);
-      }
+      
+      const checkTransitNode = (nodeId) => {
+        if (nodeId === "youbike_xinsheng_4" || nodeId === "youbike_xinsheng_3" || nodeId === "youbike_xinsheng_1") {
+          // 忠孝新生站對應 mrt_gongguan_exit3 的模擬值
+          const data = transitArrivalHashMap["mrt_gongguan_exit3"] || { next_train: 2 };
+          return data.next_train;
+        }
+        if (nodeId === "youbike_guanghua" || nodeId === "youbike_bade") {
+          // 光華商場/八德市場對應 bus_station_main_gate 的模擬值
+          const data = transitArrivalHashMap["bus_station_main_gate"] || { bus_green11: 1, bus_236: 4 };
+          return Math.min(data.bus_green11, data.bus_236);
+        }
+        return 0;
+      };
+      
+      const w1 = checkTransitNode(edge.source);
+      const w2 = checkTransitNode(edge.target);
+      waitTime = Math.max(w1, w2);
+      
       // 每等待一分鐘，增加 10% (0.1) 的權重處罰
       penaltyMultiplier += waitTime * 0.1;
     }
@@ -165,6 +193,13 @@ function updateDynamicHashMap() {
  * @returns {object} 包含路徑節點陣列、物理長度與優化後成本
  */
 function dijkstra(start, target, isBiking = false) {
+  if (typeof CAMPUS_NODES === 'undefined' || typeof CAMPUS_EDGES === 'undefined') {
+      console.error("錯誤：未成功載入 campusGraph.js 的路網資料！");
+      return { path: [], cost: Infinity, distance: 0 };
+  }
+  if (!CAMPUS_NODES[start] || !CAMPUS_NODES[target]) {
+      return { path: [], cost: Infinity, distance: 0 };
+  }
   const distances = {};
   const previous = {};
   const nodes = []; // 模擬優先佇列 (Priority Queue)
@@ -249,6 +284,7 @@ function dijkstra(start, target, isBiking = false) {
  * 獲取節點的鄰接邊與目標節點
  */
 function getNeighbors(nodeId) {
+  if (typeof CAMPUS_EDGES === 'undefined') return {};
   const neighbors = {};
   CAMPUS_EDGES.forEach(edge => {
     if (edge.source === nodeId) {
@@ -274,6 +310,7 @@ function getNeighbors(nodeId) {
  * 獲取兩點之間的邊物件
  */
 function getEdgeBetween(n1, n2) {
+  if (typeof CAMPUS_EDGES === 'undefined') return null;
   return CAMPUS_EDGES.find(e => 
     (e.source === n1 && e.target === n2) || 
     (e.source === n2 && e.target === n1)
@@ -287,6 +324,13 @@ function getEdgeBetween(n1, n2) {
  * YouBike 轉乘/騎車幸福導航規劃 (包含無車可借、滿位無法還之繞道決策)
  */
 function planYouBikeRoute(start, target) {
+  if (typeof CAMPUS_NODES === 'undefined' || typeof CAMPUS_EDGES === 'undefined') {
+      console.error("錯誤：未成功載入 campusGraph.js 的路網資料！");
+      return { path: [], distance: 0, cost: Infinity };
+  }
+  if (!CAMPUS_NODES[start] || !CAMPUS_NODES[target]) {
+      return { path: [], distance: 0, cost: Infinity };
+  }
   // 1. 尋找靠近起點的 YouBike 站點，且「必須可用車輛 >= 3」(避開無車警告站點)
   let startStations = Object.keys(CAMPUS_NODES)
     .filter(id => CAMPUS_NODES[id].isYouBike)
@@ -317,6 +361,10 @@ function planYouBikeRoute(start, target) {
   let destStation = destStations.find(d => d.docks >= 3);
   if (!destStation && destStations.length > 0) {
     destStation = destStations.find(d => d.docks > 0) || destStations[0];
+  }
+
+  if (!startStation || !destStation) {
+    return dijkstra(start, target, false);
   }
 
   // 3. 分段計算導航路徑
@@ -353,6 +401,8 @@ function planYouBikeRoute(start, target) {
  * 簡易兩點直線距離 (歐氏距離，僅用於尋找最近站點)
  */
 function getStraightLineDistance(n1, n2) {
+  if (typeof CAMPUS_NODES === 'undefined') return Infinity;
+  if (!n1 || !n2) return Infinity;
   return Math.sqrt(Math.pow(n1.x - n2.x, 2) + Math.pow(n1.y - n2.y, 2));
 }
 
@@ -363,6 +413,12 @@ function getStraightLineDistance(n1, n2) {
  * 分析規劃出的路線，計算其總步行時間、烈日曝曬率、大雨淋雨率
  */
 function analyzeRoute(path, isBikeMode = false) {
+  if (typeof CAMPUS_NODES === 'undefined' || typeof CAMPUS_EDGES === 'undefined') {
+      return { time: 0, distance: 0, exposure: 0, rain: 0 };
+  }
+  if (typeof ENVIRONMENTAL_SCENARIOS === 'undefined') {
+      return { time: 0, distance: 0, exposure: 0, rain: 0 };
+  }
   if (!path || path.length < 2) {
     return { time: 0, distance: 0, exposure: 0, rain: 0 };
   }
@@ -385,8 +441,8 @@ function analyzeRoute(path, isBikeMode = false) {
     
     // 是否騎車路段
     const isSegmentBiking = isBikeMode && 
-                            CAMPUS_NODES[n1].isYouBike && 
-                            CAMPUS_NODES[n2].isYouBike;
+                            CAMPUS_NODES[n1] && CAMPUS_NODES[n1].isYouBike && 
+                            CAMPUS_NODES[n2] && CAMPUS_NODES[n2].isYouBike;
 
     // 速度換算 (步行 1.3 m/s = 80 m/min; 騎車 4.0 m/s = 240 m/min)
     const speed = isSegmentBiking ? 240 : 80;
@@ -421,6 +477,10 @@ function analyzeRoute(path, isBikeMode = false) {
 // 6. UI 事件與模擬控制
 // ==========================================
 function populateSelectors() {
+  if (typeof CAMPUS_NODES === 'undefined') {
+      console.error("錯誤：未成功載入 campusGraph.js 的路網資料！");
+      return;
+  }
   const startSelect = document.getElementById("start-select");
   const endSelect = document.getElementById("end-select");
   
@@ -473,76 +533,12 @@ function populateSelectors() {
   endSelect.value = endNodeId;
 }
 
-function renderTransitHub() {
-  const grid = document.getElementById("transit-grid");
-  if (!grid) return;
-  
-  // 更新目前起點文字
-  const startNodeName = CAMPUS_NODES[startNodeId]?.name || startNodeId;
-  const startLabel = document.getElementById("transit-current-start");
-  if (startLabel) {
-    startLabel.textContent = startNodeName;
-  }
-  
-  grid.innerHTML = "";
-  
-  for (const stationId in transitArrivalHashMap) {
-    const data = transitArrivalHashMap[stationId];
-    const stationNode = CAMPUS_NODES[stationId];
-    if (!stationNode) continue;
-    
-    // 計算懲罰值
-    const minWait = Math.min(data.mrt, data.bus);
-    const penalty = (minWait * 0.1).toFixed(1);
-    const isHighPenalty = minWait >= 10;
-    
-    const card = document.createElement("div");
-    card.className = "transit-card";
-    // 根據捷運或公車時間微調高亮邊框
-    if (data.mrt < data.bus) {
-      card.className += " highlight-mrt";
-    } else {
-      card.className += " highlight-bus";
-    }
-    
-    card.innerHTML = `
-      <div class="transit-card-title">
-        <span class="material-symbols-outlined" style="color: var(--secondary-color); vertical-align: middle;">directions_subway</span>
-        <span style="vertical-align: middle; margin-left: 4px;">${stationNode.name}</span>
-      </div>
-      
-      <div class="transit-time-row">
-        <span class="transit-time-label">
-          <span class="material-symbols-outlined" style="font-size:16px;">subway</span> 捷運 (MRT)
-        </span>
-        <span class="transit-time-value ${data.mrt < 3 ? 'urgent' : ''}">${data.mrt} 分鐘</span>
-      </div>
-      
-      <div class="transit-time-row">
-        <span class="transit-time-label">
-          <span class="material-symbols-outlined" style="font-size:16px;">directions_bus</span> 公車 (Bus)
-        </span>
-        <span class="transit-time-value ${data.bus < 3 ? 'urgent' : ''}">${data.bus} 分鐘</span>
-      </div>
-      
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; font-size: 11.5px;">
-        <span style="color: var(--text-muted);">轉乘等待權重處罰：</span>
-        <span class="transit-penalty-badge ${isHighPenalty ? 'high' : 'low'}">
-          +${penalty} Weight
-        </span>
-      </div>
-    `;
-    
-    grid.appendChild(card);
-  }
-}
-
 function setupEventListeners() {
   // 1. 起終點選擇改變
   document.getElementById("start-select").addEventListener("change", (e) => {
     startNodeId = e.target.value;
     stopAlgoDemo();
-    updateTransitArrivalTimes(startNodeId); // 更新轉乘站 wait times
+    updateTransitArrivalTimes(startNodeId); // 更新大眾運輸 wait times
     updateDynamicHashMap();                 // 重新計算處罰權重
     calculateAndRenderRoutes();
   });
@@ -568,7 +564,7 @@ function setupEventListeners() {
     document.getElementById("start-select").value = startNodeId;
     document.getElementById("end-select").value = endNodeId;
     
-    updateTransitArrivalTimes(startNodeId); // 更新轉乘站 wait times
+    updateTransitArrivalTimes(startNodeId); // 更新大眾運輸 wait times
     updateDynamicHashMap();                 // 重新計算處罰權重
     calculateAndRenderRoutes();
   });
@@ -624,7 +620,7 @@ function setupEventListeners() {
     });
   }
 
-  // 7. 多分頁導覽按鈕點擊
+  // 7. 多分頁導覽按鈕點擊 (以 CSS 切換隱藏，保留 DOM)
   document.querySelectorAll(".nav-tab").forEach(tab => {
     tab.addEventListener("click", () => {
       document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
@@ -633,18 +629,23 @@ function setupEventListeners() {
       const targetPageId = tab.getAttribute("data-page");
       document.querySelectorAll(".page-container").forEach(page => {
         page.classList.remove("active-page");
+        page.style.display = "none";
       });
-      document.getElementById(targetPageId).classList.add("active-page");
       
-      // 如果切換到大眾運輸看板，渲染看板內容
-      if (targetPageId === "transit-page") {
-        renderTransitHub();
+      const activePage = document.getElementById(targetPageId);
+      if (activePage) {
+        activePage.classList.add("active-page");
+        activePage.style.display = "flex";
       }
     });
   });
 }
 
 function ensureHybridOptions() {
+  if (typeof CAMPUS_NODES === 'undefined') {
+      console.error("錯誤：未成功載入 campusGraph.js 的路網資料！");
+      return;
+  }
   const startSelect = document.getElementById("start-select");
   const endSelect = document.getElementById("end-select");
 
@@ -754,6 +755,10 @@ function showToast(message) {
 // 7. 地圖渲染與雙路線繪製 (SVG)
 // ==========================================
 function renderMap() {
+  if (typeof CAMPUS_NODES === 'undefined' || typeof CAMPUS_EDGES === 'undefined') {
+      console.error("錯誤：未成功載入 campusGraph.js 的路網資料！");
+      return;
+  }
   const svg = document.getElementById("map-svg");
   if (!svg) return;
 
@@ -844,6 +849,9 @@ function renderMap() {
 }
 
 function renderYouBikeMarkers() {
+  if (typeof CAMPUS_NODES === 'undefined') {
+      return;
+  }
   const youbikeGroup = document.getElementById("youbike-group");
   if (!youbikeGroup) return;
   youbikeGroup.innerHTML = "";
@@ -919,6 +927,10 @@ function handleNodeClick(nodeId) {
  * 核心：重新計算並繪製兩條路線對比（原始最快 vs 幸福優化）
  */
 function calculateAndRenderRoutes() {
+  if (typeof CAMPUS_NODES === 'undefined' || typeof CAMPUS_EDGES === 'undefined') {
+      console.error("錯誤：未成功載入 campusGraph.js 的路網資料！");
+      return;
+  }
   if (!startNodeId || !endNodeId || startNodeId === endNodeId) return;
 
   // 如果演算法演示模擬正在執行中，且不是由模擬結束或正在渲染觸發的，則重置它
@@ -1060,9 +1072,6 @@ function calculateAndRenderRoutes() {
   
   document.getElementById("comp-orig-bike").textContent = origRisk;
   document.getElementById("comp-happy-bike").textContent = happyRisk;
-
-  // 每次重算路線時，連動更新轉乘看板
-  renderTransitHub();
 }
 
 /**
@@ -1098,6 +1107,9 @@ function isEdgeInPath(edge, path) {
 // 8. 演算法解說面板資訊渲染
 // ==========================================
 function updateAlgorithmExplanation(scenario) {
+  if (typeof CAMPUS_NODES === 'undefined' || !scenario) {
+      return;
+  }
   const textContainer = document.getElementById("algorithm-desc-container");
   if (!textContainer) return;
 
@@ -1158,6 +1170,7 @@ function updateAlgorithmExplanation(scenario) {
 // ==========================================
 
 function showNodeInspector(nodeId) {
+  if (typeof CAMPUS_NODES === 'undefined') return;
   const node = CAMPUS_NODES[nodeId];
   if (!node) return;
   
@@ -1177,13 +1190,14 @@ function showNodeInspector(nodeId) {
     };
   }
   
-  const inspector = document.getElementById("backstage-hash-map");
+  const inspector = document.getElementById("hash-map-inspector");
   if (inspector) {
     inspector.textContent = JSON.stringify(state, null, 2);
   }
 }
 
 function showEdgeInspector(edgeId) {
+  if (typeof CAMPUS_EDGES === 'undefined' || typeof CAMPUS_NODES === 'undefined') return;
   const edge = CAMPUS_EDGES.find(e => e.id === edgeId);
   if (!edge) return;
   
@@ -1202,17 +1216,11 @@ function showEdgeInspector(edgeId) {
     weightedCost: edge.distance * (edgeWeightHashMap[edge.id] || 1.0)
   };
   
-  const inspector = document.getElementById("backstage-hash-map");
-  if (inspector) {
-    inspector.textContent = JSON.stringify(state, null, 2);
-  }
+  document.getElementById("hash-map-inspector").textContent = JSON.stringify(state, null, 2);
 }
 
 function resetInspector() {
-  const inspector = document.getElementById("backstage-hash-map");
-  if (inspector) {
-    inspector.textContent = "Hover over a node or edge in the map view to inspect its Hash Map state...";
-  }
+  document.getElementById("hash-map-inspector").textContent = "Hover over node/edge to inspect...";
 }
 
 function updateMapEdgesVisuals() {
@@ -1239,6 +1247,10 @@ function updateMapEdgesVisuals() {
 }
 
 function startAlgoDemo() {
+  if (typeof CAMPUS_NODES === 'undefined' || typeof CAMPUS_EDGES === 'undefined') {
+      console.error("錯誤：未成功載入 campusGraph.js 的路網資料！");
+      return;
+  }
   stopAlgoDemo();
   
   simState.active = true;
@@ -1321,14 +1333,23 @@ function stepAlgoDemo() {
     }
   });
   
+  if (typeof CAMPUS_NODES === 'undefined') {
+    finishAlgoDemo(false);
+    return;
+  }
   const activeNode = CAMPUS_NODES[currNodeId];
-  const inspector = document.getElementById("backstage-hash-map");
+  if (!activeNode) {
+    finishAlgoDemo(false);
+    return;
+  }
+  
+  const inspector = document.getElementById("hash-map-inspector");
   if (inspector) {
     inspector.textContent = JSON.stringify({
       phase: "Algorithm Step-Run Search",
       currentNode: activeNode.name,
       minDistance: simState.distances[currNodeId] === Infinity ? "Infinity" : `${simState.distances[currNodeId].toFixed(1)} m`,
-      parentLink: simState.previous[currNodeId] ? CAMPUS_NODES[simState.previous[currNodeId]].name : "None",
+      parentLink: (simState.previous[currNodeId] && CAMPUS_NODES[simState.previous[currNodeId]]) ? CAMPUS_NODES[simState.previous[currNodeId]].name : "None",
       visitedCount: simState.visited.size
     }, null, 2);
   }
@@ -1379,11 +1400,16 @@ function stepAlgoDemo() {
 }
 
 function updateMinHeapPanel() {
-  const panel = document.getElementById("backstage-min-heap");
+  const panel = document.getElementById("min-heap-inspector");
   if (!panel) return;
   
+  if (typeof CAMPUS_NODES === 'undefined') {
+    panel.innerHTML = "Queue = [] (Empty)";
+    return;
+  }
+  
   const activeQueue = simState.queue
-    .filter(id => simState.distances[id] < Infinity)
+    .filter(id => simState.distances[id] < Infinity && CAMPUS_NODES[id])
     .map(id => ({
       name: CAMPUS_NODES[id].name,
       dist: simState.distances[id]
@@ -1391,15 +1417,15 @@ function updateMinHeapPanel() {
     .sort((a, b) => a.dist - b.dist);
     
   if (activeQueue.length === 0) {
-    panel.textContent = "Queue = [] (Empty)";
+    panel.innerHTML = "Queue = [] (Empty)";
     return;
   }
   
   const listHtml = activeQueue.map((item, idx) => {
-    return `[${idx}] ${item.name} (${item.dist.toFixed(1)}m)\n`;
+    return `<div style="margin-bottom: 2px;">[${idx}] ${item.name} (${item.dist.toFixed(1)}m)</div>`;
   }).join("");
   
-  panel.textContent = `Queue = [\n${listHtml}]`;
+  panel.innerHTML = listHtml;
 }
 
 function finishAlgoDemo(success) {

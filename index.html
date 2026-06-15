@@ -12,6 +12,8 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+  <!-- 頂部導覽列 -->
   <header class="header-bar">
     <div class="brand">
       <span class="material-symbols-outlined">navigation</span>
@@ -21,9 +23,6 @@
     <nav class="nav-actions">
       <button class="nav-tab active" data-page="map-page">
         <span class="material-symbols-outlined">map</span>地圖導航
-      </button>
-      <button class="nav-tab" data-page="transit-page">
-        <span class="material-symbols-outlined">directions_bus</span>大眾運輸看板
       </button>
       <button class="nav-tab" data-page="backstage-page">
         <span class="material-symbols-outlined">analytics</span>演算法觀測後台
@@ -39,316 +38,192 @@
       
       <!-- 左側控制面板 (Sidebar) -->
       <aside class="control-sidebar">
-        <div class="sidebar-scrollable">
-          
-          <!-- 起訖規劃與導航 -->
-          <div style="margin-bottom: var(--spacing-md);">
-            <h2 class="section-title">
-              <span class="material-symbols-outlined">settings_suggest</span>
-              起訖規劃與導航
-            </h2>
-            
-            <!-- 起點與終點選擇 -->
-            <div class="glass-card" style="margin-bottom: var(--spacing-sm);">
-              <div class="input-group">
-                <label class="input-label" for="start-select">起點 (出發點)</label>
-                <div class="select-wrapper">
-                  <select id="start-select" class="select-input">
-                    <!-- JS 動態寫入 -->
-                  </select>
-                </div>
-              </div>
-              
-              <div class="swap-btn-container">
-                <button id="swap-btn" class="swap-btn" title="切換起訖點">
-                  <span class="material-symbols-outlined">swap_vert</span>
-                </button>
-              </div>
-              
-              <div class="input-group" style="margin-bottom: 12px;">
-                <label class="input-label" for="end-select">目的地 (終點)</label>
-                <div class="select-wrapper">
-                  <select id="end-select" class="select-input">
-                    <!-- JS 動態寫入 -->
-                  </select>
-                </div>
-              </div>
-            </div>
-            
-            <!-- 開始導航 & 演算法演示 CTA -->
-            <div style="display: flex; gap: var(--spacing-sm); margin-top: 10px;">
-              <button id="navigate-btn" class="btn-primary" style="flex: 1.2;">
-                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">near_me</span>
-                開始導航
-              </button>
-              <button id="algo-demo-btn" class="btn-primary" style="flex: 1; background: transparent; border: 2px solid var(--secondary-color); color: var(--secondary-color); box-shadow: none;">
-                <span class="material-symbols-outlined">play_arrow</span>
-                演算法演示
-              </button>
-            </div>
-          </div>
-
-          <!-- 導航偏好模式 (Dijkstra Penalty Switcher) -->
-          <div style="margin-bottom: var(--spacing-md);">
-            <h2 class="section-title">
-              <span class="material-symbols-outlined">tune</span>
-              幸福通勤偏好模式
-            </h2>
-            <div class="mode-tabs">
-              <button class="mode-tab active" data-mode="fastest">
-                <span>⚡</span>最快路線
-              </button>
-              <button class="mode-tab" data-mode="bike">
-                <span>🚲</span>騎車轉乘
-              </button>
-              <button class="mode-tab" data-mode="coolest">
-                <span>🍃</span>最涼避曝曬
-              </button>
-              <button class="mode-tab" data-mode="dry">
-                <span>☔</span>少淋雨走廊
-              </button>
-              <button class="mode-tab" data-mode="accessible">
-                <span>♿</span>無障礙避陡坡
-              </button>
-            </div>
-          </div>
-
-          <!-- 資料結構與演算法解說 -->
-          <div>
-            <h2 class="section-title">
-              <span class="material-symbols-outlined">terminal</span>
-              演算法與資料結構解說
-            </h2>
-            <div class="glass-card" style="border-left: 4px solid var(--primary-color); margin-bottom: 0; padding: var(--spacing-sm);">
-              <div class="monitor-row">
-                <span>Hash Map 狀態查詢</span>
-                <span class="monitor-value">O(1)</span>
-              </div>
-              <div class="monitor-row">
-                <span>Dijkstra / A* 尋路</span>
-                <span class="monitor-value">O((V+E) log V)</span>
-              </div>
-              
-              <!-- 動態說明的容器 -->
-              <div id="algorithm-desc-container" style="font-size: 11.5px; color: var(--text-secondary); margin-top: 14px; line-height: 1.6;">
-                <!-- 由 JS 動態渲染 -->
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </aside>
-
-      <!-- 右側地圖區域 (Map Visualization Canvas) -->
-      <main class="map-canvas">
-        <!-- 科技背景網線 -->
-        <div class="map-grid"></div>
-
-        <!-- 頂部浮動天氣選擇列 (Floating pills) -->
-        <div class="weather-floating-bar">
-          <button class="weather-pill active" data-scenario="normal">☀️ 晴朗</button>
-          <button class="weather-pill" data-scenario="heat">🥵 高溫</button>
-          <button class="weather-pill" data-scenario="rain">🌧️ 暴雨</button>
-          <button class="weather-pill" data-scenario="youbike_clog">🚲 YouBike 警告</button>
-        </div>
+      <div class="sidebar-scrollable">
         
-        <!-- 路線圖示說明 (Legend) -->
-        <div class="route-legend">
-          <div class="legend-item">
-            <div class="legend-color-line original"></div>
-            <span>物理最快路線 (無優化)</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color-line happy"></div>
-            <span>優化幸福導航路線</span>
-          </div>
-        </div>
-
-        <!-- SVG 地圖繪製畫布 -->
-        <svg id="map-svg" class="map-svg" viewBox="0 0 1000 800" preserveAspectRatio="xMidYMid meet">
-          <!-- 半透明多邊形環境遮罩層 -->
-          <g id="overlays-group">
-            <!-- 突然暴雨區 (Blue polygon) -->
-            <polygon id="rain-overlay" class="overlay-polygon rain-overlay" points="400,150 780,180 720,620 480,480"></polygon>
-            <!-- 烈日曝曬區 (Orange polygon) -->
-            <polygon id="heat-overlay" class="overlay-polygon heat-overlay" points="150,300 480,280 580,520 250,500"></polygon>
-          </g>
-
-          <!-- 地圖環境區域標籤 -->
-          <text id="rain-label" class="overlay-label" x="600" y="240" font-family="'Montserrat', sans-serif" font-weight="900" font-size="14" fill="#00bdfd">🌧️ 暴雨無遮蓋區</text>
-          <text id="heat-label" class="overlay-label" x="300" y="380" font-family="'Montserrat', sans-serif" font-weight="900" font-size="14" fill="#ff8c00">☀️ 烈日曝曬區</text>
-
-          <!-- 基礎道路線段層 -->
-          <g id="edges-group"></g>
-
-          <!-- 路線渲染層 -->
-          <!-- 1. 原始最快路線 (紅虛線) -->
-          <path id="route-original" class="path-original" d=""></path>
+        <!-- 標題簡介 -->
+        <div style="margin-bottom: var(--spacing-md);">
+          <h2 class="section-title">
+            <span class="material-symbols-outlined">settings_suggest</span>
+            起訖規劃與導航
+          </h2>
           
-          <!-- 2. 幸福導航路線 (發光綠線) -->
-          <path id="route-happy" class="path-happy" d=""></path>
-          
-          <!-- 3. 流光動畫點綴 (流動效果) -->
-          <path id="route-flow" class="path-happy path-flow" d="" stroke="rgba(255,255,255,0.7)" stroke-width="2" opacity="0.8"></path>
-
-          <!-- 地標節點層 -->
-          <g id="nodes-group"></g>
-
-          <!-- YouBike 站點專用標記層 -->
-          <g id="youbike-group"></g>
-        </svg>
-
-        <!-- 雙路徑指標對比面板 (Dual-Path Metrics Comparison Panel) -->
-        <div id="comparison-card" class="map-floating-card" style="display: flex; flex-direction: column; gap: 8px; width: 330px; border-left: 4px solid var(--primary-color); padding: var(--spacing-sm) var(--spacing-md);">
-          <h4 style="font-family: var(--font-headline); font-size: 12px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; display: flex; align-items: center; gap: 6px;">
-            <span class="material-symbols-outlined text-[16px]">compare_arrows</span>
-            雙路徑指標對比 (Route Metrics)
-          </h4>
-          
-          <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: left;">
-            <thead>
-              <tr style="border-bottom: 1px solid var(--border-light); color: var(--text-muted); font-size: 10px;">
-                <th style="padding: 4px 0;">指標 Metric</th>
-                <th style="padding: 4px 4px; color: var(--error-color);">原始最快</th>
-                <th style="padding: 4px 0; color: var(--primary-color); text-align: right;">幸福優化</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr style="border-bottom: 1px dashed var(--border-light);">
-                <td style="padding: 5px 0; font-weight: 500;">⏱️ 預估時間</td>
-                <td id="comp-orig-time" style="padding: 5px 4px; color: var(--text-secondary);">-- 分鐘</td>
-                <td id="comp-happy-time" style="padding: 5px 0; font-weight: bold; color: var(--primary-color); text-align: right;">-- 分鐘</td>
-              </tr>
-              <tr style="border-bottom: 1px dashed var(--border-light);">
-                <td style="padding: 5px 0; font-weight: 500;">🌳 樹蔭避曬</td>
-                <td id="comp-orig-sun" style="padding: 5px 4px; color: var(--text-secondary);">--</td>
-                <td id="comp-happy-sun" style="padding: 5px 0; font-weight: bold; color: var(--secondary-color); text-align: right;">--</td>
-              </tr>
-              <tr style="border-bottom: 1px dashed var(--border-light);">
-                <td style="padding: 5px 0; font-weight: 500;">☔ 走廊雨遮</td>
-                <td id="comp-orig-rain" style="padding: 5px 4px; color: var(--text-secondary);">--</td>
-                <td id="comp-happy-rain" style="padding: 5px 0; font-weight: bold; color: var(--secondary-color); text-align: right;">--</td>
-              </tr>
-              <tr>
-                <td style="padding: 5px 0; font-weight: 500;">🚲 YouBike 風險</td>
-                <td id="comp-orig-bike" style="padding: 5px 4px; color: var(--text-secondary);">--</td>
-                <td id="comp-happy-bike" style="padding: 5px 0; font-weight: bold; color: var(--primary-color); text-align: right;">--</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- 自訂 Toast 提示 (防呆用) -->
-        <div id="alert-toast" class="alert-toast">
-          <span class="icon">info</span>
-          <span class="toast-text">提示訊息</span>
-        </div>
-
-      </main>
-    </div>
-
-    <!-- 分頁 2: 大眾運輸看板 -->
-    <div id="transit-page" class="page-container" style="display: none; width: 100%; height: 100%; padding: var(--spacing-lg); overflow-y: auto;">
-      <div class="transit-container" style="max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: var(--spacing-lg);">
-        <div class="page-header-container">
-          <h1 class="page-title" style="display: flex; align-items: center; gap: 8px;">
-            <span class="material-symbols-outlined text-primary" style="font-size: 32px; color: var(--secondary-color);">directions_bus</span>
-            大眾運輸即時監控看板 (Transit Hub)
-          </h1>
-          <p class="page-subtitle" style="color: var(--text-secondary); margin-top: 4px;">
-            此看板模擬轉乘站的即時到站狀態。在「地圖導航」頁面變更起點時，此處會連動更新對應該起點附近捷運站與公車站的預估等待時間（Wait Times），作為 Dijkstra/A* 計算「騎車轉乘」路徑時的動態等待懲罰權重。
-          </p>
-        </div>
-
-        <div class="current-origin-bar glass-card" style="padding: 16px; display: flex; align-items: center; justify-content: space-between; border-left: 4px solid var(--primary-color); margin-bottom: 0;">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <span class="material-symbols-outlined" style="color: var(--primary-color);">my_location</span>
-            <span style="font-weight: 600; color: var(--text-primary);">目前導航起點位置：</span>
-            <span id="transit-current-start" style="font-weight: 700; color: var(--secondary-color); font-size: 16px;">--</span>
-          </div>
-          <div style="font-size: 12px; color: var(--text-muted);">
-            權重公式：路權懲罰值 = 到站時間 (分) × 0.1
-          </div>
-        </div>
-
-        <!-- Transit Grid -->
-        <div id="transit-grid" class="transit-grid">
-          <!-- Dynamic cards will be rendered by JS -->
-        </div>
-
-        <!-- Explanation card -->
-        <div class="glass-card" style="padding: var(--spacing-md); border-top: 4px solid var(--secondary-color); margin-bottom: 0;">
-          <h3 style="font-size: 15px; font-weight: 700; margin-bottom: var(--spacing-sm); display: flex; align-items: center; gap: 6px;">
-            <span class="material-symbols-outlined" style="font-size: 18px; color: var(--secondary-color);">info</span>
-            大眾運輸路權處罰機制 (Wait Time Penalty Mechanism)
-          </h3>
-          <p style="font-size: 12.5px; line-height: 1.6; color: var(--text-secondary);">
-            當使用者選擇<b>「騎車轉乘」</b>偏好模式時，若路徑需行經聯外的 YouBike / 捷運 / 公車節點（如：忠孝新生站 4 號出口），演算法除了計算物理距離外，會以 <b>$O(1)$ 的複雜度自 `transitArrivalHashMap` 雜湊表</b>中檢索該轉乘站點的最新到站等待時間，並加上 <code>waitTime * 0.1</code> 的邊權重懲罰（Wait Penalty）。
-            <br>
-            例如：若某捷運站的班次尚需等待 12 分鐘，演算法便會將該邊的權重調高 1.2。如果附近另一站點僅需等待 2 分鐘（僅加權 0.2），Dijkstra / A* 演算法將自動引導騎士避開嚴重延遲的站點，改走最快能搭上車的轉乘路徑。
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <!-- 分頁 3: 演算法觀測後台 -->
-    <div id="backstage-page" class="page-container" style="display: none; width: 100%; height: 100%; padding: var(--spacing-lg); overflow: hidden;">
-      <div class="backstage-container" style="max-width: 1400px; margin: 0 auto; height: 100%; display: flex; flex-direction: column; gap: var(--spacing-md); width: 100%;">
-        <div class="page-header-container">
-          <h1 class="page-title" style="display: flex; align-items: center; gap: 8px;">
-            <span class="material-symbols-outlined text-primary" style="font-size: 32px; color: var(--purple-color);">analytics</span>
-            演算法與資料結構觀測後台 (DS Backstage)
-          </h1>
-          <p class="page-subtitle" style="color: var(--text-secondary); margin-top: 4px;">
-            這裡展示了當前導航規劃在 Dijkstra/A* 搜尋過程中的 Priority Queue (Min-Heap) 即時變化，以及環境/ YouBike/ 轉乘狀態在 Hash Map 中的 O(1) 即時查詢內容。
-          </p>
-        </div>
-
-        <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-md); min-height: 0; overflow: hidden; margin-bottom: var(--spacing-md);">
-          <!-- Left Panel: Min-Heap Queue Visualizer -->
-          <div class="glass-card" style="display: flex; flex-direction: column; padding: var(--spacing-md); height: 100%; min-height: 0; margin-bottom: 0;">
-            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-light); padding-bottom: 8px; margin-bottom: 12px;">
-              <h3 style="font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px; color: var(--purple-color);">
-                <span class="material-symbols-outlined" style="color: var(--purple-color);">account_tree</span>
-                Dijkstra / A* Min-Heap Priority Queue Live Status
-              </h3>
-              <span class="badge" style="background: rgba(155, 89, 182, 0.1); color: var(--purple-color); font-size: 10.5px; padding: 2px 6px; border-radius: var(--radius-sm);">O((V+E) log V)</span>
+          <!-- 起點與終點選擇 -->
+          <div class="glass-card" style="margin-bottom: var(--spacing-sm);">
+            <div class="input-group">
+              <label class="input-label" for="start-select">起點 (出發點)</label>
+              <div class="select-wrapper">
+                <select id="start-select" class="select-input">
+                  <!-- JS 動態寫入 -->
+                </select>
+              </div>
             </div>
             
-            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.5;">
-              下方的 Heap 堆積佇列展示了 Dijkstra 優先隊列在每一輪擴展節點時的狀態。每一項包含 <code>(節點, 累計權重距離)</code>。在尋路進行時（或點選<b>「演算法演示」</b>時），可即時觀察 Heap 最小頂部節點的 Pop 出隊 (Extract-Min) 與子節點 Insert / Decrease-Key 的動態模擬。
+            <div class="swap-btn-container">
+              <button id="swap-btn" class="swap-btn" title="切換起訖點">
+                <span class="material-symbols-outlined">swap_vert</span>
+              </button>
             </div>
-
-            <div style="flex: 1; background: #1a1a24; border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius-sm); padding: 12px; font-family: var(--font-mono); font-size: 12px; color: #b1b0e3; overflow-y: auto; line-height: 1.5;">
-              <pre id="backstage-min-heap" style="white-space: pre-wrap; word-break: break-all; margin: 0; font-family: var(--font-mono);">Queue = []
-
-(請在「地圖導航」頁面點選「演算法演示」以觀察 Heap 動態出入隊流程)</pre>
+            
+            <div class="input-group" style="margin-bottom: 12px;">
+              <label class="input-label" for="end-select">目的地 (終點)</label>
+              <div class="select-wrapper">
+                <select id="end-select" class="select-input">
+                  <!-- JS 動態寫入 -->
+                </select>
+              </div>
             </div>
           </div>
+          
+          <!-- 開始導航 & 演算法演示 CTA -->
+          <div style="display: flex; gap: var(--spacing-sm); margin-top: 10px;">
+            <button id="navigate-btn" class="btn-primary" style="flex: 1.2;">
+              <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">near_me</span>
+              開始導航
+            </button>
+            <button id="algo-demo-btn" class="btn-primary" style="flex: 1; background: transparent; border: 2px solid var(--secondary-color); color: var(--secondary-color); box-shadow: none;">
+              <span class="material-symbols-outlined">play_arrow</span>
+              演算法演示
+            </button>
+          </div>
+        </div>
 
-          <!-- Right Panel: Hash Map Inspector -->
-          <div class="glass-card" style="display: flex; flex-direction: column; padding: var(--spacing-md); height: 100%; min-height: 0; margin-bottom: 0;">
-            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-light); padding-bottom: 8px; margin-bottom: 12px;">
-              <h3 style="font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px; color: var(--primary-color);">
-                <span class="material-symbols-outlined" style="color: var(--primary-color);">data_object</span>
-                Hash Map Dynamic Variables Live Inspector
-              </h3>
-              <span class="badge" style="background: rgba(46, 204, 113, 0.1); color: var(--primary-color); font-size: 10.5px; padding: 2px 6px; border-radius: var(--radius-sm);">O(1) Access</span>
+        <!-- 導航偏好模式 (Dijkstra Penalty Switcher) -->
+        <div style="margin-bottom: var(--spacing-md);">
+          <h2 class="section-title">
+            <span class="material-symbols-outlined">tune</span>
+            幸福通勤偏好模式
+          </h2>
+          <div class="mode-tabs">
+            <button class="mode-tab active" data-mode="fastest">
+              <span>⚡</span>最快路線
+            </button>
+            <button class="mode-tab" data-mode="bike">
+              <span>🚲</span>騎車轉乘
+            </button>
+            <button class="mode-tab" data-mode="coolest">
+              <span>🍃</span>最涼避曝曬
+            </button>
+            <button class="mode-tab" data-mode="dry">
+              <span>☔</span>少淋雨走廊
+            </button>
+            <button class="mode-tab" data-mode="accessible">
+              <span>♿</span>無障礙避陡坡
+            </button>
+          </div>
+        </div>
+
+        <!-- 資料結構與演算法監控 -->
+        <div>
+          <h2 class="section-title">
+            <span class="material-symbols-outlined">terminal</span>
+            演算法與資料結構解說
+          </h2>
+          <div class="glass-card" style="border-left: 4px solid var(--primary-color); margin-bottom: 0; padding: var(--spacing-sm);">
+            <div class="monitor-row">
+              <span>Hash Map 狀態查詢</span>
+              <span class="monitor-value">O(1)</span>
             </div>
-
-            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.5;">
-              Dijkstra 演算法執行時，會以 $O(1)$ 複雜度自雜湊表中查詢當前天氣處罰乘數、YouBike 站點剩餘車位，以及轉乘站等待時間。
-              <br>
-              <strong>👉 互動說明：</strong>在「地圖導航」頁面中，將滑鼠游標<b>懸停 (Hover)</b> 於地圖上的任何「路段/線段 (Edge)」或「地標/YouBike 節點 (Node)」上，此處將以 JSON 格式即時呈現該物件在 Hash Map 中對應的屬性與動態權重。
+            <div class="monitor-row">
+              <span>Dijkstra / A* 尋路</span>
+              <span class="monitor-value">O((V+E) log V)</span>
             </div>
-
-            <div style="flex: 1; background: #1e1e1e; border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius-sm); padding: 12px; font-family: var(--font-mono); font-size: 12px; color: #a9ff9b; overflow-y: auto; line-height: 1.5;">
-              <pre id="backstage-hash-map" style="margin: 0; white-space: pre-wrap; word-break: break-all; font-family: var(--font-mono);">Hover over a node or edge in the map view to inspect its Hash Map state...</pre>
+            
+            <!-- 動態說明的容器 -->
+            <div id="algorithm-desc-container" style="font-size: 11.5px; color: var(--text-secondary); margin-top: 14px; line-height: 1.6;">
+              <!-- 由 JS 動態渲染 -->
             </div>
           </div>
         </div>
+
       </div>
-    </div>x dashed var(--border-light);">
+    </aside>
+
+    <!-- 右側地圖區域 (Map Visualization Canvas) -->
+    <main class="map-canvas">
+      <!-- 科技背景網線 -->
+      <div class="map-grid"></div>
+      
+      <!-- 頂部浮動天氣選擇列 (Floating pills) -->
+      <div class="weather-floating-bar">
+        <button class="weather-pill active" data-scenario="normal">☀️ 晴朗</button>
+        <button class="weather-pill" data-scenario="heat">🥵 高溫</button>
+        <button class="weather-pill" data-scenario="rain">🌧️ 暴雨</button>
+        <button class="weather-pill" data-scenario="youbike_clog">🚲 YouBike 警告</button>
+      </div>
+      
+      <!-- 路線圖示說明 (Legend) -->
+      <div class="route-legend">
+        <div class="legend-item">
+          <div class="legend-color-line original"></div>
+          <span>物理最快路線 (無優化)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color-line happy"></div>
+          <span>優化幸福導航路線</span>
+        </div>
+      </div>
+
+      <!-- SVG 地圖繪製畫布 -->
+      <svg id="map-svg" class="map-svg" viewBox="0 0 1000 800" preserveAspectRatio="xMidYMid meet">
+        <!-- 半透明多邊形環境遮罩層 -->
+        <g id="overlays-group">
+          <!-- 突然暴雨區 (Blue polygon) -->
+          <polygon id="rain-overlay" class="overlay-polygon rain-overlay" points="400,150 780,180 720,620 480,480"></polygon>
+          <!-- 烈日曝曬區 (Orange polygon) -->
+          <polygon id="heat-overlay" class="overlay-polygon heat-overlay" points="150,300 480,280 580,520 250,500"></polygon>
+        </g>
+
+        <!-- 地圖環境區域標籤 -->
+        <text id="rain-label" class="overlay-label" x="600" y="240" font-family="'Montserrat', sans-serif" font-weight="900" font-size="14" fill="#00bdfd">🌧️ 暴雨無遮蓋區</text>
+        <text id="heat-label" class="overlay-label" x="300" y="380" font-family="'Montserrat', sans-serif" font-weight="900" font-size="14" fill="#ff8c00">☀️ 烈日曝曬區</text>
+
+        <!-- 基礎道路線段層 -->
+        <g id="edges-group"></g>
+
+        <!-- 路線渲染層 (先渲染的在下，後在頂) -->
+        <!-- 1. 原始最快路線 (紅虛線) -->
+        <path id="route-original" class="path-original" d=""></path>
+        
+        <!-- 2. 幸福導航路線 (發光綠線) -->
+        <path id="route-happy" class="path-happy" d=""></path>
+        
+        <!-- 3. 流光動畫點綴 (流動效果) -->
+        <path id="route-flow" class="path-happy path-flow" d="" stroke="rgba(255,255,255,0.7)" stroke-width="2" opacity="0.8"></path>
+
+        <!-- 地標節點層 -->
+        <g id="nodes-group"></g>
+
+        <!-- YouBike 站點專用標記層 -->
+        <g id="youbike-group"></g>
+      </svg>
+
+      <!-- 雙路徑指標對比面板 (Dual-Path Metrics Comparison Panel) -->
+      <div id="comparison-card" class="map-floating-card" style="display: flex; flex-direction: column; gap: 8px; width: 330px; border-left: 4px solid var(--primary-color); padding: var(--spacing-sm) var(--spacing-md);">
+        <h4 style="font-family: var(--font-headline); font-size: 12px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; display: flex; align-items: center; gap: 6px;">
+          <span class="material-symbols-outlined text-[16px]">compare_arrows</span>
+          雙路徑指標對比 (Route Metrics)
+        </h4>
+        
+        <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: left;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--border-light); color: var(--text-muted); font-size: 10px;">
+              <th style="padding: 4px 0;">指標 Metric</th>
+              <th style="padding: 4px 4px; color: var(--error-color);">原始最快</th>
+              <th style="padding: 4px 0; color: var(--primary-color); text-align: right;">幸福優化</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom: 1px dashed var(--border-light);">
+              <td style="padding: 5px 0; font-weight: 500;">⏱️ 預估時間</td>
+              <td id="comp-orig-time" style="padding: 5px 4px; color: var(--text-secondary);">-- 分鐘</td>
+              <td id="comp-happy-time" style="padding: 5px 0; font-weight: bold; color: var(--primary-color); text-align: right;">-- 分鐘</td>
+            </tr>
+            <tr style="border-bottom: 1px dashed var(--border-light);">
+              <td style="padding: 5px 0; font-weight: 500;">🌳 樹蔭避曬</td>
+              <td id="comp-orig-sun" style="padding: 5px 4px; color: var(--text-secondary);">--</td>
+              <td id="comp-happy-sun" style="padding: 5px 0; font-weight: bold; color: var(--secondary-color); text-align: right;">--</td>
+            </tr>
+            <tr style="border-bottom: 1px dashed var(--border-light);">
               <td style="padding: 5px 0; font-weight: 500;">☔ 走廊雨遮</td>
               <td id="comp-orig-rain" style="padding: 5px 4px; color: var(--text-secondary);">--</td>
               <td id="comp-happy-rain" style="padding: 5px 0; font-weight: bold; color: var(--secondary-color); text-align: right;">--</td>
@@ -370,6 +245,65 @@
 
     </main>
 
+  </div> <!-- Close of #map-page -->
+
+  <!-- 分頁 2: 演算法觀測後台 -->
+  <div id="backstage-page" class="page-container" style="display: none; width: 100%; height: 100%; padding: var(--spacing-lg); overflow: hidden; background-color: #fcfdfe; flex-direction: column;">
+    <div class="backstage-container" style="max-width: 1400px; margin: 0 auto; height: 100%; display: flex; flex-direction: column; gap: var(--spacing-md); width: 100%;">
+      <div class="page-header-container">
+        <h1 class="page-title" style="display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-outlined text-primary" style="font-size: 32px; color: var(--purple-color);">analytics</span>
+          演算法與資料結構觀測後台 (DS Backstage)
+        </h1>
+        <p class="page-subtitle" style="color: var(--text-secondary); margin-top: 4px;">
+          這裡展示了當前導航規劃在 Dijkstra/A* 搜尋過程中的 Priority Queue (Min-Heap) 即時變化，以及環境/ YouBike/ 轉乘狀態在 Hash Map 中的 O(1) 即時查詢內容。
+        </p>
+      </div>
+
+      <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-md); min-height: 0; overflow: hidden; margin-bottom: var(--spacing-md);">
+        <!-- Left Panel: Min-Heap Queue Visualizer -->
+        <div class="glass-card" style="display: flex; flex-direction: column; padding: var(--spacing-md); height: 100%; min-height: 0; margin-bottom: 0;">
+          <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-light); padding-bottom: 8px; margin-bottom: 12px;">
+            <h3 style="font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px; color: var(--purple-color);">
+              <span class="material-symbols-outlined" style="color: var(--purple-color);">account_tree</span>
+              Dijkstra / A* Min-Heap Priority Queue Live Status
+            </h3>
+            <span class="badge" style="background: rgba(155, 89, 182, 0.1); color: var(--purple-color); font-size: 10.5px; padding: 2px 6px; border-radius: var(--radius-sm);">O((V+E) log V)</span>
+          </div>
+          
+          <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.5;">
+            下方的 Heap 堆積佇列展示了 Dijkstra 優先隊列在每一輪擴展節點時的狀態。每一項包含 <code>(節點, 累計權重距離)</code>。在尋路進行時（或點選<b>「演算法演示」</b>時），可即時觀察 Heap 最小頂部節點的 Pop 出隊 (Extract-Min) 與子節點 Insert / Decrease-Key 的動態模擬。
+          </div>
+
+          <div style="flex: 1; background: #1a1a24; border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius-sm); padding: 12px; font-family: var(--font-mono); font-size: 12px; color: #b1b0e3; overflow-y: auto; line-height: 1.5;">
+            <pre id="min-heap-inspector" style="white-space: pre-wrap; word-break: break-all; margin: 0; font-family: var(--font-mono); line-height: 1.4;">Queue = []
+
+(請在「地圖導航」頁面點選「演算法演示」以觀察 Heap 動態出入隊流程)</pre>
+          </div>
+        </div>
+
+        <!-- Right Panel: Hash Map Inspector -->
+        <div class="glass-card" style="display: flex; flex-direction: column; padding: var(--spacing-md); height: 100%; min-height: 0; margin-bottom: 0;">
+          <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-light); padding-bottom: 8px; margin-bottom: 12px;">
+            <h3 style="font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px; color: var(--primary-color);">
+              <span class="material-symbols-outlined" style="color: var(--primary-color);">data_object</span>
+              Hash Map Dynamic Variables Live Inspector
+            </h3>
+            <span class="badge" style="background: rgba(46, 204, 113, 0.1); color: var(--primary-color); font-size: 10.5px; padding: 2px 6px; border-radius: var(--radius-sm);">O(1) Access</span>
+          </div>
+
+          <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.5;">
+            Dijkstra 演算法執行時，會以 $O(1)$ 複雜度自雜湊表中查詢當前天氣處罰乘數、YouBike 站點剩餘車位，以及轉乘站等待時間。
+            <br>
+            <strong>👉 互動說明：</strong>在「地圖導航」頁面中，將滑鼠游標<b>懸停 (Hover)</b> 於地圖上的任何「路段/線段 (Edge)」或「地標/YouBike 節點 (Node)」上，此處將以 JSON 格式即時呈現該物件在 Hash Map 中對應的屬性與動態權重。
+          </div>
+
+          <div style="flex: 1; background: #1e1e1e; border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius-sm); padding: 12px; font-family: var(--font-mono); font-size: 12px; color: #a9ff9b; overflow-y: auto; line-height: 1.5;">
+            <pre id="hash-map-inspector" style="margin: 0; white-space: pre-wrap; word-break: break-all; font-family: var(--font-mono);">Hover over a node or edge in the map view to inspect its Hash Map state...</pre>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- 載入 Graph 與 情境模擬 資料 (宣告為全域變數以供 script.js 存取) -->
