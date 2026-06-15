@@ -14,6 +14,16 @@ let endNodeId = "building_science";     // 預設終點 (科研大樓)
 let youbikeHashMap = {};    // 儲存 YouBike 站點車位狀態
 let edgeWeightHashMap = {}; // 儲存邊的動態加權 (Penalty) 乘數
 
+// 大眾運輸到站等待時間的 Hash Map (模擬即時轉乘等待分鐘數，用於 Dijkstra 動態處罰)
+let transitArrivalHashMap = {
+  "youbike_xinsheng_4": { mrt: 2, bus: 5 },
+  "youbike_xinsheng_3": { mrt: 4, bus: 8 },
+  "youbike_xinsheng_1": { mrt: 7, bus: 1 },
+  "youbike_guanghua": { mrt: 10, bus: 4 },
+  "youbike_ee": { mrt: 12, bus: 3 },
+  "youbike_bade": { mrt: 15, bus: 9 }
+};
+
 // 演算法演示模擬狀態
 let simState = {
   active: false,
@@ -35,6 +45,9 @@ function initSystem() {
   // 初始化下拉選單
   populateSelectors();
   
+  // 根據預設起點更新轉乘到站時間
+  updateTransitArrivalTimes(startNodeId);
+  
   // 載入預設情境
   switchScenario(currentScenarioId);
   
@@ -46,6 +59,25 @@ function initSystem() {
   
   // 執行首次導航計算
   calculateAndRenderRoutes();
+}
+
+/**
+ * 根據起點位置與各轉乘站點的直線距離，動態模擬到站時間 (Wait Times)
+ */
+function updateTransitArrivalTimes(startNode) {
+  const startCoord = CAMPUS_NODES[startNode];
+  if (!startCoord) return;
+  
+  for (const stationId in transitArrivalHashMap) {
+    const stationCoord = CAMPUS_NODES[stationId];
+    if (!stationCoord) continue;
+    
+    const dist = getStraightLineDistance(startCoord, stationCoord);
+    // 用距離與固定除數模擬出到站時間，使其在不同起點時有機地改變
+    const seed = Math.floor(dist / 40);
+    transitArrivalHashMap[stationId].mrt = Math.max(1, (seed * 2) % 12 + 1);
+    transitArrivalHashMap[stationId].bus = Math.max(1, (seed * 3) % 18 + 1);
+  }
 }
 
 /**
@@ -87,11 +119,6 @@ function updateDynamicHashMap() {
       if (edge.slope > 1) {
         penaltyMultiplier += (edge.slope - 1) * scenario.penalties.slope;
       }
-    } else if (scenario.weather.condition === "polluted") {
-      // 空污區域處罰
-      if (scenario.pollutedEdges && scenario.pollutedEdges.includes(edge.id)) {
-        penaltyMultiplier += scenario.penalties.pollution;
-      }
     }
     
     // 根據目前選定的「導航偏好模式」施加額外的路權罰值
@@ -104,8 +131,19 @@ function updateDynamicHashMap() {
     if (currentModeId === "accessible" && edge.slope > 1) {
       penaltyMultiplier += edge.slope * 4.0; // 「無障礙模式」對陡坡/樓梯施加極重罰值
     }
-    if (currentModeId === "pollution" && scenario.pollutedEdges && scenario.pollutedEdges.includes(edge.id)) {
-      penaltyMultiplier += 3.0; // 「避開空污模式」對受污染主要幹道施加重罰
+    
+    // 騎車轉乘模式 (bike)：如果邊的任一端點是轉乘站，則加上該站的大眾運輸到站等待時間懲罰 (Wait Penalty)
+    if (currentModeId === "bike") {
+      let waitTime = 0;
+      if (transitArrivalHashMap[edge.source]) {
+        const data = transitArrivalHashMap[edge.source];
+        waitTime = Math.min(data.mrt, data.bus);
+      } else if (transitArrivalHashMap[edge.target]) {
+        const data = transitArrivalHashMap[edge.target];
+        waitTime = Math.min(data.mrt, data.bus);
+      }
+      // 每等待一分鐘，增加 10% (0.1) 的權重處罰
+      penaltyMultiplier += waitTime * 0.1;
     }
     
     // 存入 Hash Map 以供 Dijkstra 以 O(1) 時間查詢
@@ -435,11 +473,77 @@ function populateSelectors() {
   endSelect.value = endNodeId;
 }
 
+function renderTransitHub() {
+  const grid = document.getElementById("transit-grid");
+  if (!grid) return;
+  
+  // 更新目前起點文字
+  const startNodeName = CAMPUS_NODES[startNodeId]?.name || startNodeId;
+  const startLabel = document.getElementById("transit-current-start");
+  if (startLabel) {
+    startLabel.textContent = startNodeName;
+  }
+  
+  grid.innerHTML = "";
+  
+  for (const stationId in transitArrivalHashMap) {
+    const data = transitArrivalHashMap[stationId];
+    const stationNode = CAMPUS_NODES[stationId];
+    if (!stationNode) continue;
+    
+    // 計算懲罰值
+    const minWait = Math.min(data.mrt, data.bus);
+    const penalty = (minWait * 0.1).toFixed(1);
+    const isHighPenalty = minWait >= 10;
+    
+    const card = document.createElement("div");
+    card.className = "transit-card";
+    // 根據捷運或公車時間微調高亮邊框
+    if (data.mrt < data.bus) {
+      card.className += " highlight-mrt";
+    } else {
+      card.className += " highlight-bus";
+    }
+    
+    card.innerHTML = `
+      <div class="transit-card-title">
+        <span class="material-symbols-outlined" style="color: var(--secondary-color); vertical-align: middle;">directions_subway</span>
+        <span style="vertical-align: middle; margin-left: 4px;">${stationNode.name}</span>
+      </div>
+      
+      <div class="transit-time-row">
+        <span class="transit-time-label">
+          <span class="material-symbols-outlined" style="font-size:16px;">subway</span> 捷運 (MRT)
+        </span>
+        <span class="transit-time-value ${data.mrt < 3 ? 'urgent' : ''}">${data.mrt} 分鐘</span>
+      </div>
+      
+      <div class="transit-time-row">
+        <span class="transit-time-label">
+          <span class="material-symbols-outlined" style="font-size:16px;">directions_bus</span> 公車 (Bus)
+        </span>
+        <span class="transit-time-value ${data.bus < 3 ? 'urgent' : ''}">${data.bus} 分鐘</span>
+      </div>
+      
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; font-size: 11.5px;">
+        <span style="color: var(--text-muted);">轉乘等待權重處罰：</span>
+        <span class="transit-penalty-badge ${isHighPenalty ? 'high' : 'low'}">
+          +${penalty} Weight
+        </span>
+      </div>
+    `;
+    
+    grid.appendChild(card);
+  }
+}
+
 function setupEventListeners() {
   // 1. 起終點選擇改變
   document.getElementById("start-select").addEventListener("change", (e) => {
     startNodeId = e.target.value;
     stopAlgoDemo();
+    updateTransitArrivalTimes(startNodeId); // 更新轉乘站 wait times
+    updateDynamicHashMap();                 // 重新計算處罰權重
     calculateAndRenderRoutes();
   });
 
@@ -464,13 +568,15 @@ function setupEventListeners() {
     document.getElementById("start-select").value = startNodeId;
     document.getElementById("end-select").value = endNodeId;
     
+    updateTransitArrivalTimes(startNodeId); // 更新轉乘站 wait times
+    updateDynamicHashMap();                 // 重新計算處罰權重
     calculateAndRenderRoutes();
   });
 
-  // 3. 情境模擬卡片點擊
-  document.querySelectorAll(".scenario-card").forEach(card => {
-    card.addEventListener("click", () => {
-      const scenarioId = card.getAttribute("data-scenario");
+  // 3. 情境模擬按鈕點擊 (頂部浮動 pills)
+  document.querySelectorAll(".weather-pill").forEach(pill => {
+    pill.addEventListener("click", () => {
+      const scenarioId = pill.getAttribute("data-scenario");
       stopAlgoDemo();
       switchScenario(scenarioId);
     });
@@ -517,6 +623,25 @@ function setupEventListeners() {
       }
     });
   }
+
+  // 7. 多分頁導覽按鈕點擊
+  document.querySelectorAll(".nav-tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      
+      const targetPageId = tab.getAttribute("data-page");
+      document.querySelectorAll(".page-container").forEach(page => {
+        page.classList.remove("active-page");
+      });
+      document.getElementById(targetPageId).classList.add("active-page");
+      
+      // 如果切換到大眾運輸看板，渲染看板內容
+      if (targetPageId === "transit-page") {
+        renderTransitHub();
+      }
+    });
+  });
 }
 
 function ensureHybridOptions() {
@@ -563,12 +688,12 @@ function ensureHybridOptions() {
 function switchScenario(scenarioId) {
   currentScenarioId = scenarioId;
   
-  // 更新情境卡片選取狀態
-  document.querySelectorAll(".scenario-card").forEach(card => {
-    if (card.getAttribute("data-scenario") === scenarioId) {
-      card.classList.add("active");
+  // 更新浮動天氣藥丸選取狀態
+  document.querySelectorAll(".weather-pill").forEach(pill => {
+    if (pill.getAttribute("data-scenario") === scenarioId) {
+      pill.classList.add("active");
     } else {
-      card.classList.remove("active");
+      pill.classList.remove("active");
     }
   });
 
@@ -935,6 +1060,9 @@ function calculateAndRenderRoutes() {
   
   document.getElementById("comp-orig-bike").textContent = origRisk;
   document.getElementById("comp-happy-bike").textContent = happyRisk;
+
+  // 每次重算路線時，連動更新轉乘看板
+  renderTransitHub();
 }
 
 /**
@@ -996,11 +1124,6 @@ function updateAlgorithmExplanation(scenario) {
       <div style="margin-bottom: 8px;"><strong>♿ 無障礙避陡坡模式：</strong></div>
       <div>演算法評估邊的 slope 屬性。當坡度等級為 2 時權重加重，當坡度等級為 3 (如共同教室旁樓梯) 時，權重被<strong>處罰放大 12 倍</strong>，引導腳部受傷或推重物成員尋找平緩坡道。</div>
     `;
-  } else if (currentModeId === "pollution") {
-    detailsHtml = `
-      <div style="margin-bottom: 8px;"><strong>😷 避開空污模式：</strong></div>
-      <div>AQI 超標 165，系統更新主幹道 (新生南路、三創、八德路) 之處罰權重<strong>增加 200%</strong>。導航自動規劃繞行至校園內側林蔭深處之少廢氣路段。</div>
-    `;
   } else if (currentModeId === "bike") {
     // 騎車轉乘模式
     const mrtBikes = youbikeHashMap["youbike_xinsheng_4"] ? youbikeHashMap["youbike_xinsheng_4"].bikes : 0;
@@ -1008,16 +1131,17 @@ function updateAlgorithmExplanation(scenario) {
     
     detailsHtml = `
       <div style="margin-bottom: 8px;"><strong>🚲 騎車轉乘模式：</strong></div>
-      <div style="margin-bottom: 4px;">結合步行與騎乘。騎車段時間權重除以 3 (速度提升 3 倍)，但限制 slope &ge; 3 (樓梯) 禁止騎車。</div>
-      ${scenario.name === "YouBike 供需失衡" ? `
+      <div style="margin-bottom: 4px;">結合步行與騎乘。騎車段速度提升 3 倍，斜坡 slope &ge; 3 (樓梯/陡坡) 禁止騎車。</div>
+      <div style="margin-bottom: 4px; color: var(--secondary-color);">* 整合轉乘站即時到站等待時間 Wait Penalty（每等待 1 分鐘，權重處罰 +0.1）。</div>
+      ${scenario.name.includes("YouBike") || scenario.name.includes("供需") || currentScenarioId === "youbike_clog" ? `
         <div style="color: var(--error-color); margin-top: 6px; border-top: 1px dashed rgba(255,180,171,0.2); padding-top: 4px;">
           <strong>⚠️ YouBike 臨界繞道警告：</strong><br>
           偵測到起點忠孝新生站(4號出口)可用車為 <strong>${mrtBikes} 輛</strong>，目的地電機工程系站可用空車位為 <strong>${scienceDocks} 個</strong> (皆 &lt; 3，高風險臨界)。<br>
-          演算法自動修改中繼導航點，引導騎士步行前往最近且車源充沛的<strong>「youbike忠孝新生站(3號出口)」</strong>借車，並改騎至車位充裕的<strong>「youbike八德市場」</strong>還車後步行抵達。
+          演算法自動避險，引導至車源充足之站點。
         </div>
       ` : `
         <div style="color: var(--primary-color); margin-top: 6px;">
-          ✓ YouBike 站點車位皆充足，導航優先選取直線最近站點轉乘。
+          ✓ 系統以 O(1) 動態查詢轉乘等待時間與車位，規避高延遲站點。
         </div>
       `}
     `;
@@ -1053,7 +1177,10 @@ function showNodeInspector(nodeId) {
     };
   }
   
-  document.getElementById("hash-map-inspector").textContent = JSON.stringify(state, null, 2);
+  const inspector = document.getElementById("backstage-hash-map");
+  if (inspector) {
+    inspector.textContent = JSON.stringify(state, null, 2);
+  }
 }
 
 function showEdgeInspector(edgeId) {
@@ -1075,11 +1202,17 @@ function showEdgeInspector(edgeId) {
     weightedCost: edge.distance * (edgeWeightHashMap[edge.id] || 1.0)
   };
   
-  document.getElementById("hash-map-inspector").textContent = JSON.stringify(state, null, 2);
+  const inspector = document.getElementById("backstage-hash-map");
+  if (inspector) {
+    inspector.textContent = JSON.stringify(state, null, 2);
+  }
 }
 
 function resetInspector() {
-  document.getElementById("hash-map-inspector").textContent = "Hover over node/edge to inspect...";
+  const inspector = document.getElementById("backstage-hash-map");
+  if (inspector) {
+    inspector.textContent = "Hover over a node or edge in the map view to inspect its Hash Map state...";
+  }
 }
 
 function updateMapEdgesVisuals() {
@@ -1189,13 +1322,16 @@ function stepAlgoDemo() {
   });
   
   const activeNode = CAMPUS_NODES[currNodeId];
-  document.getElementById("hash-map-inspector").textContent = JSON.stringify({
-    phase: "Algorithm Step-Run Search",
-    currentNode: activeNode.name,
-    minDistance: simState.distances[currNodeId] === Infinity ? "Infinity" : `${simState.distances[currNodeId].toFixed(1)} m`,
-    parentLink: simState.previous[currNodeId] ? CAMPUS_NODES[simState.previous[currNodeId]].name : "None",
-    visitedCount: simState.visited.size
-  }, null, 2);
+  const inspector = document.getElementById("backstage-hash-map");
+  if (inspector) {
+    inspector.textContent = JSON.stringify({
+      phase: "Algorithm Step-Run Search",
+      currentNode: activeNode.name,
+      minDistance: simState.distances[currNodeId] === Infinity ? "Infinity" : `${simState.distances[currNodeId].toFixed(1)} m`,
+      parentLink: simState.previous[currNodeId] ? CAMPUS_NODES[simState.previous[currNodeId]].name : "None",
+      visitedCount: simState.visited.size
+    }, null, 2);
+  }
   
   if (currNodeId === simState.target) {
     finishAlgoDemo(true);
@@ -1243,7 +1379,7 @@ function stepAlgoDemo() {
 }
 
 function updateMinHeapPanel() {
-  const panel = document.getElementById("min-heap-inspector");
+  const panel = document.getElementById("backstage-min-heap");
   if (!panel) return;
   
   const activeQueue = simState.queue
@@ -1255,15 +1391,15 @@ function updateMinHeapPanel() {
     .sort((a, b) => a.dist - b.dist);
     
   if (activeQueue.length === 0) {
-    panel.innerHTML = "Queue = [] (Empty)";
+    panel.textContent = "Queue = [] (Empty)";
     return;
   }
   
   const listHtml = activeQueue.map((item, idx) => {
-    return `<div style="margin-bottom: 2px;">[${idx}] ${item.name} (${item.dist.toFixed(1)}m)</div>`;
+    return `[${idx}] ${item.name} (${item.dist.toFixed(1)}m)\n`;
   }).join("");
   
-  panel.innerHTML = listHtml;
+  panel.textContent = `Queue = [\n${listHtml}]`;
 }
 
 function finishAlgoDemo(success) {

@@ -918,3 +918,225 @@ body {
   }
 }
 
+/* ==========================================================================
+   多分頁切換與 UI 升級樣式
+   ========================================================================== */
+
+/* 頂部頁籤按鈕樣式 */
+.nav-tab {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  outline: none;
+}
+
+.nav-tab:hover {
+  color: var(--primary-color);
+  background: rgba(46, 204, 113, 0.05);
+}
+
+.nav-tab.active {
+  color: var(--primary-color);
+  background: rgba(46, 204, 113, 0.1);
+  box-shadow: inset 0 0 4px rgba(46, 204, 113, 0.05);
+}
+
+/* 分頁顯示控制 */
+.page-container {
+  display: none;
+  width: 100%;
+  height: 100%;
+}
+
+.page-container.active-page {
+  display: flex;
+}
+
+/* 浮動天氣選擇列 (Floating pills) */
+.weather-floating-bar {
+  position: absolute;
+  top: var(--spacing-md);
+  right: var(--spacing-md);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-full);
+  padding: 5px;
+  display: flex;
+  gap: 4px;
+  z-index: 30;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.weather-pill {
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-full);
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.weather-pill:hover {
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--text-primary);
+}
+
+/* 針對各天氣情境的 active 狀態樣式 (Wow factor配色) */
+.weather-pill.active[data-scenario="normal"] {
+  background: var(--primary-color);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(46, 204, 113, 0.25);
+}
+
+.weather-pill.active[data-scenario="heat"] {
+  background: var(--accent-color);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(241, 196, 15, 0.25);
+}
+
+.weather-pill.active[data-scenario="rain"] {
+  background: var(--secondary-color);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(52, 152, 219, 0.25);
+}
+
+.weather-pill.active[data-scenario="youbike_clog"] {
+  background: var(--error-color);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(231, 76, 60, 0.25);
+}
+
+/* ==========================================================================
+   大眾運輸看板 (Transit Hub) 專屬樣式
+   ========================================================================== */
+.transit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-md);
+}
+
+.transit-card {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  border-top: 4px solid var(--border-light);
+}
+
+.transit-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+}
+
+.transit-card.highlight-mrt {
+  border-top-color: var(--secondary-color);
+}
+
+.transit-card.highlight-bus {
+  border-top-color: var(--accent-color);
+}
+
+.transit-card-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.transit-time-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.01);
+}
+
+.transit-time-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.transit-time-value {
+  font-family: var(--font-headline);
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.transit-time-value.urgent {
+  color: var(--error-color);
+  animation: transit-blink 1.5s infinite ease-in-out;
+}
+
+@keyframes transit-blink {
+  0%, 100% { opacity: 1; filter: drop-shadow(0 0 2px rgba(231, 76, 60, 0.2)); }
+  50% { opacity: 0.5; }
+}
+
+.transit-penalty-badge {
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.transit-penalty-badge.low {
+  background: rgba(46, 204, 113, 0.1);
+  color: var(--primary-color);
+}
+
+.transit-penalty-badge.high {
+  background: rgba(231, 76, 60, 0.1);
+  color: var(--error-color);
+}
+
+/* ==========================================================================
+   演算法觀測後台 (DS Backstage) 專屬樣式
+   ========================================================================== */
+#backstage-page {
+  background-color: #fcfdfe;
+}
+
+#backstage-page .glass-card {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
+}
+
+.badge {
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+
