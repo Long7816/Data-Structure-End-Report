@@ -1122,8 +1122,127 @@ body {
 .modal-desc {
   font-size: 13px;
   line-height: 1.6;
-  color: var(--text-secondary, #666);
+  color: var(--text-secondary);
   margin: 0;
+}
+
+.modal-description-text {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  text-align: justify;
+}
+
+.modal-extra-info {
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: var(--radius-sm, 8px);
+  padding: 12px;
+  margin-top: 8px;
+  transition: all 0.3s ease;
+}
+
+.youbike-status-info {
+  border-left: 3px solid var(--primary-color);
+  background: rgba(46, 204, 113, 0.03);
+}
+
+.youbike-status-info.warning-status {
+  border-left: 3px solid var(--error-color);
+  background: rgba(231, 76, 60, 0.03);
+}
+
+.modal-extra-info .info-title {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.modal-extra-info .info-title span.material-symbols-outlined {
+  color: inherit;
+}
+
+.youbike-status-info .info-title {
+  color: var(--primary-color);
+}
+
+.youbike-status-info.warning-status .info-title {
+  color: var(--error-color);
+}
+
+.modal-extra-info .info-grid {
+  display: flex;
+  justify-content: space-between;
+  margin: 8px 0;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 6px;
+  padding: 8px 0;
+  border: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+.modal-extra-info .info-item {
+  flex: 1;
+  text-align: center;
+}
+
+.modal-extra-info .info-item:not(:last-child) {
+  border-right: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.modal-extra-info .info-label {
+  display: block;
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.modal-extra-info .info-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.modal-extra-info .info-value.low-count {
+  color: var(--error-color);
+  animation: text-pulse-red 2s infinite ease-in-out;
+}
+
+@keyframes text-pulse-red {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.modal-extra-info .info-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--error-color);
+  background: rgba(231, 76, 60, 0.06);
+  padding: 8px;
+  border-radius: 6px;
+  margin-top: 6px;
+  line-height: 1.4;
+  border: 1px solid rgba(231, 76, 60, 0.1);
+}
+
+.modal-extra-info .info-success {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--primary-color);
+  background: rgba(46, 204, 113, 0.06);
+  padding: 8px;
+  border-radius: 6px;
+  margin-top: 6px;
+  line-height: 1.4;
+  border: 1px solid rgba(46, 204, 113, 0.1);
 }
 
 /* ==========================================================================
@@ -1183,4 +1302,31 @@ circle,
 g[data-id] {
   cursor: pointer !important;
   pointer-events: auto !important; /* 強制提高地標的滑鼠感應優先級 */
+}
+
+/* ==========================================================================
+   新增：地標彈出視窗圖片樣式
+   ========================================================================== */
+
+.modal-photo-container {
+  width: 100%;
+  max-height: 200px; /* 控制圖片最大高度，避免撐爆 Modal */
+  overflow: hidden;
+  border-radius: var(--radius-sm, 8px);
+  margin-bottom: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #111; /* 圖片載入前的底色 */
+}
+
+.modal-landmark-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* 關鍵：保護圖片比例不變形，自動裁切填滿 */
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+/* 滑鼠懸停在圖片上時的輕微放大效果，增加科技互動感 */
+.modal-photo-container:hover .modal-landmark-photo {
+  transform: scale(1.03);
 }

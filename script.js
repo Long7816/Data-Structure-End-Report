@@ -923,118 +923,105 @@ function handleNodeClick(nodeId) {
 
   // 2. 新增功能：只有當點擊的節點類型是 "building"（大樓）或具備有名稱的地標時，才顯示詳細資訊
   if (node.type === "building" || node.name) {
-    openLandmarkModal(node);
+    openLandmarkModal(nodeId);
   }
 }
 
 /**
- * 動態開啟彈出視窗並加載對應的北科大圖片與大樓描述
+ * 動態開啟彈出視窗並加載對應的北科大圖片與大樓描述 (全地標支援版)
  */
-/**
- * 動態開啟彈出視窗並加載對應的北科大圖片與大樓描述
- */
-/**
- * 動態開啟彈出視窗並加載對應的北科大圖片與大樓描述
- */
-function openLandmarkModal(node) {
+function openLandmarkModal(nodeId) {
+  const node = CAMPUS_NODES[nodeId];
+  if (!node) return;
+
   const modal = document.getElementById("landmark-modal");
   const titleEl = document.getElementById("modal-title");
-  const imgEl = document.getElementById("modal-image"); 
+  const imageEl = document.getElementById("modal-image");
   const descEl = document.getElementById("modal-desc");
 
-  if (!modal || !titleEl || !imgEl || !descEl) return;
+  if (!modal || !titleEl) return;
 
-  // 1. 動態設定視窗標題
-  titleEl.textContent = node.name;
+  // 1. 設定標題
+  titleEl.innerText = node.name;
 
-  // 2. 定義需要顯示圖片框與詳細介紹的節點 ID 清單
-  // 包含你原本的所有大樓，以及這次新指定的地點
-  const showImageNodes = [
-    "building_science", "building_1st", "building_2nd", "building_3rd", "building_4th", 
-    "building_common", "building_zhongzheng", "building_comprehensive", "building_pioneer",
-    "spot_green_garden", "spot_guanghua", "spot_syntrend", "spot_dorm"
-  ];
-
-  // 3. 判斷是否屬於要顯示圖片的地點
-  if (node.type === "building" || showImageNodes.includes(node.id) || node.name === "綠光庭園" || node.name === "光華商場" || node.name === "三創生活園區" || node.name === "北科宿舍") {
-    
-    // 確保圖片框是顯示的
-    imgEl.style.display = "block";
-
-    // 動態組合圖片路徑：./photos/台北科技大學/地點名稱.jpg
-    const imagePath = `./photos/台北科技大學/${node.name}.jpg`;
-    imgEl.src = imagePath;
-
-    // 防破圖機制：如果你本地還沒放這張照片，會自動生成帶有地點名稱的科技感暫時底圖
-    imgEl.onerror = function() {
-      this.onerror = null;
-      this.src = "https://placehold.co/400x200/1e1e24/2ecc71?text=" + encodeURIComponent(node.name + " (圖片載入中/暫無圖片)");
-    };
-
-    // 4. 依據節點 ID 分流給予最精準的詳細地點資訊
-    let locationInfo = "";
-    switch (node.id) {
-      // --- 原有教學大樓資訊 ---
-      case "building_science":
-        locationInfo = "國立台北科技大學的指標建築，內含精密儀器中心、多功能講堂、化學工程與生物科技相關實驗室及教授研究室。";
-        break;
-      case "building_1st":
-        locationInfo = "第一教學大樓。校園內歷史悠久的教學大樓，主要為各科系核心專業教室、基礎學科實驗室以及行政討論空間。";
-        break;
-      case "building_2nd":
-        locationInfo = "第二教學大樓。內含多間多媒體階梯教室與資訊科學、電子工程相關實驗室，是學生修習專業科目的重要基地。";
-        break;
-      case "building_3rd":
-        locationInfo = "第三教學大樓。主要提供給工程學院、機械系等相關核心課程使用，並設有專屬的研究生與專題實作空間。";
-        break;
-      case "building_4th":
-        locationInfo = "第四教學大樓。緊鄰共同科館，內部包含多間大型共同課堂、外語教學中心教室，是全校學生通識與語文必修的核心上課地點。";
-        break;
-      case "building_common":
-        locationInfo = "共同科館。北科大最具代表性的核心地標之一，前方有著名的紅樓與草皮。通識教育中心與多數基礎學科教授辦公室皆位於此。";
-        break;
-      case "building_zhongzheng":
-        locationInfo = "中正館。大型集會與體育多功能場館，學校重要典禮（如畢業典禮、校慶）、大型室內體育競賽及社團成果發表的主要舉辦場地。";
-        break;
-      case "building_comprehensive":
-        locationInfo = "綜合大樓。包含地下室活動中心、學生餐廳、生活福利社，以及上層的學務處、教務處等各項師生生活機能與行政申辦窗口。";
-        break;
-      case "building_pioneer":
-        locationInfo = "先鋒國際研發大樓。高聳的新型科技大樓，內部設有國際產學合作實驗室、大型多功能國際會議廳，是校園推動前瞻研發的重要核心。";
-        break;
-
-      // --- 🌟 新增：周邊重要聯外節點資訊 ---
-      case "spot_green_garden":
-        locationInfo = "綠光庭園。位於校園核心的生態景觀綠地，綠意盎然、環境清幽。提供了師生在課餘時間散步、休憩、討論專題與放鬆身心的絕佳戶外開放空間。";
-        break;
-      case "spot_guanghua":
-        locationInfo = "光華商場（光華數位新天地）。全台最知名的電子零件、電腦週邊及數位產品核心商圈，緊鄰北科大西側，是資工、電子系學生採購專題實驗材料與硬體設備的科技補給站。";
-        break;
-      case "spot_syntrend":
-        locationInfo = "三創生活園區。緊鄰光華商場的現代化科技生活購物中心，匯集了各大國際科技品牌旗艦店、動漫文化精品及創客體驗空間，是校園周邊極具指標性的前沿科技與潮流地標。";
-        break;
-      case "spot_dorm":
-        locationInfo = "北科宿舍（學生宿舍群）。提供外地與國際學生在校安居的核心生活區。本導航系統特別針對高溫情境，為從宿舍出發趕早八上課的同學優化了多樹蔭與遮陽廊道之幸福路線。";
-        break;
-
-      default:
-        locationInfo = node.description || `這是位於台北科技大學附近的「${node.name}」，可點擊控制台切換幸福偏好模式以進行動態路徑規劃導航。`;
+  // 2. 設定圖片
+  if (imageEl) {
+    if (node.photo) {
+      imageEl.src = node.photo;
+      imageEl.style.display = "block";
+      // 圖片加載失敗時隱藏
+      imageEl.onerror = function() {
+        this.style.display = "none";
+      };
+    } else {
+      imageEl.style.display = "none";
     }
-    descEl.textContent = locationInfo;
-
-  } else if (node.type === "youbike") {
-    // 如果是 YouBike 站點，保持隱藏圖片框，呈現即時 Hash Map 資訊
-    imgEl.style.display = "none";
-    descEl.textContent = node.description || `這是「${node.name}」公共自行車租借站。您可以透過系統即時監控此站點在 Hash Map 中的車位狀態與 O(1) 剩餘數量。`;
-  } else {
-    // 捷運站或一般交叉路口等其他節點，預設隱藏圖片框
-    imgEl.style.display = "none";
-    descEl.textContent = node.description || `導航路網節點：「${node.name}」，已成功定位至系統路網圖中。`;
   }
 
-  // 5. 順暢喚出 Modal 視窗
+  // 3. 設定簡介與動態詳細狀態 (比如 YouBike 的可用車位或大眾運輸資訊)
+  if (descEl) {
+    let descHtml = `<div class="modal-description-text">${node.desc || "此地標暫無詳細介紹。"}</div>`;
+    
+    // 如果是 YouBike 站點，顯示即時車位與臨界值預警
+    if (node.isYouBike) {
+      const ybStatus = youbikeHashMap[nodeId] || { bikes: 0, docks: 0 };
+      const isWarning = ybStatus.bikes < 3 || ybStatus.docks < 3;
+      descHtml += `
+        <div class="modal-extra-info youbike-status-info ${isWarning ? 'warning-status' : ''}">
+          <div class="info-title">
+            <span class="material-symbols-outlined" style="vertical-align: middle; margin-right: 4px; font-size: 18px;">pedal_bike</span>
+            YouBike 站點即時狀態
+          </div>
+          <div class="info-grid" style="display: flex; justify-content: space-between; margin-top: 8px; margin-bottom: 8px;">
+            <div class="info-item" style="flex: 1; text-align: center; border-right: 1px solid rgba(0,0,0,0.05);">
+              <span class="info-label" style="display: block; font-size: 11px; color: var(--text-muted);">🚲 可借車輛</span>
+              <span class="info-value" style="font-size: 16px; font-weight: 700; color: ${ybStatus.bikes < 3 ? 'var(--error-color)' : 'var(--primary-color)'};">${ybStatus.bikes} 輛</span>
+            </div>
+            <div class="info-item" style="flex: 1; text-align: center;">
+              <span class="info-label" style="display: block; font-size: 11px; color: var(--text-muted);">🅿️ 可用空位</span>
+              <span class="info-value" style="font-size: 16px; font-weight: 700; color: ${ybStatus.docks < 3 ? 'var(--error-color)' : 'var(--primary-color)'};">${ybStatus.docks} 個</span>
+            </div>
+          </div>
+          ${isWarning ? `
+            <div class="info-warning" style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--error-color); background: rgba(231, 76, 60, 0.05); padding: 6px; border-radius: 4px; margin-top: 6px;">
+              <span class="material-symbols-outlined" style="font-size: 14px;">warning</span>
+              <span>站點車位吃緊！可用數少於 3，有無法借還車風險，已啟動自動繞道避險。</span>
+            </div>
+          ` : `
+            <div class="info-success" style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--primary-color); background: rgba(46, 204, 113, 0.05); padding: 6px; border-radius: 4px; margin-top: 6px;">
+              <span class="material-symbols-outlined" style="font-size: 14px;">check_circle</span>
+              <span>車源與車位充足，可放心前往借還。</span>
+            </div>
+          `}
+        </div>
+      `;
+    } else if (node.type === "transit") {
+      descHtml += `
+        <div class="modal-extra-info transit-status-info" style="background: rgba(52, 152, 219, 0.05); padding: var(--spacing-sm); border-radius: var(--radius-sm); border-left: 3px solid var(--secondary-color); margin-top: var(--spacing-sm);">
+          <div class="info-title" style="display: flex; align-items: center; font-size: 12px; font-weight: 700; color: var(--secondary-color); margin-bottom: 4px;">
+            <span class="material-symbols-outlined" style="font-size: 16px; margin-right: 4px;">directions_subway</span>
+            聯外轉乘樞紐
+          </div>
+          <p class="transit-desc" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary); margin: 0;">此節點提供聯外大眾運輸服務。於偏好設定中選擇<b>「騎車轉乘」</b>時，系統將結合 YouBike 進行最佳複合路徑規劃，並以 O(1) 雜湊表動態載入轉乘等待時間進行避堵規劃。</p>
+        </div>
+      `;
+    } else if (node.type === "building") {
+      descHtml += `
+        <div class="modal-extra-info building-status-info" style="background: rgba(241, 196, 15, 0.05); padding: var(--spacing-sm); border-radius: var(--radius-sm); border-left: 3px solid var(--accent-color); margin-top: var(--spacing-sm);">
+          <div class="info-title" style="display: flex; align-items: center; font-size: 12px; font-weight: 700; color: #d4ac0d; margin-bottom: 4px;">
+            <span class="material-symbols-outlined" style="font-size: 16px; margin-right: 4px;">domain</span>
+            校園主要建築
+          </div>
+          <p class="building-desc" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary); margin: 0;">在下雨或高溫情境下，此建築周邊路段將根據是否有<b>雨遮長廊</b>或<b>樹蔭覆蓋</b>而動態調配路權加權，導航系統會自動優先引導通行或避開曝曬/淋雨段。</p>
+        </div>
+      `;
+    }
+
+    descEl.innerHTML = descHtml;
+  }
+
   modal.classList.add("show");
-}
+} 
 
 function calculateAndRenderRoutes() {
   if (typeof CAMPUS_NODES === 'undefined' || typeof CAMPUS_EDGES === 'undefined') {
@@ -1577,6 +1564,54 @@ document.addEventListener("DOMContentLoaded", () => {
     console.error("找不到 Modal 或關閉按鈕元件，請確認 HTML 中的 ID 是否正確。");
   }
 });
+
+// ==========================================
+// 這是您原本的函式（名稱可能叫 showDetail 或 openModal）
+// ==========================================
+function showDetail(nodeId) {
+    const node = CAMPUS_NODES[nodeId];
+    if (!node) return;
+
+    // -------------------------------------------------------------
+    // 【這裡請完整保留您原本所有的程式碼】
+    // 包含：您原本的 textContent 修改、innerHTML 設定、YouBike 動態數據載入等
+    // -------------------------------------------------------------
+    
+    
+    // 🔥【以下是新增的程式碼：只負責安全地將圖片「塞入」最上方，不影響原有內容】🔥
+    
+    // 1. 先把可能殘留的舊地標圖片移除，避免連續點擊時圖片重複堆疊
+    const oldPhoto = document.querySelector('.modal-photo-container');
+    if (oldPhoto) {
+        oldPhoto.remove();
+    }
+
+    // 2. 檢查該節點在 campusGraph.js 中是否有設定 photo 欄位
+    if (node.photo) {
+        // 建立圖片的容器與 img 標籤
+        const photoContainer = document.createElement('div');
+        photoContainer.className = 'modal-photo-container';
+        
+        // 使用 onerror 防呆：如果照片不存在，就自動隱藏，不留破圖
+        photoContainer.innerHTML = `
+            <img src="${node.photo}" alt="${node.name}" class="modal-landmark-photo" onerror="this.parentNode.style.display='none';">
+        `;
+
+        // 3. 找到您的資訊欄內容容器（請確認您的 ID 是否為 'modal-content' 或 'detail-info'）
+        const contentEl = document.getElementById('modal-content') || document.getElementById('detail-info');
+        
+        if (contentEl) {
+            // 💡 關鍵安全做法：使用 insertBefore 把圖片插到內容的最前面
+            // 這樣您原本寫進 contentEl 的所有文字、即時數據和功能都不會被刪除
+            contentEl.insertBefore(photoContainer, contentEl.firstChild);
+        }
+    }
+
+    // -------------------------------------------------------------
+    // 【這裡請完整保留您原本最後的顯示邏輯】
+    // 例如：modal.classList.add('active') 或 show() 等
+    // -------------------------------------------------------------
+}
 
 
 
