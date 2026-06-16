@@ -165,44 +165,67 @@
 
       <!-- SVG 地圖繪製畫布 -->
       <svg id="map-svg" class="map-svg" viewBox="0 0 1000 800" preserveAspectRatio="xMidYMid meet">
-        <!-- 半透明多邊形環境遮罩層 -->
-        <g id="overlays-group">
-          <!-- 突然暴雨區 (Blue polygon) -->
-          <polygon id="rain-overlay" class="overlay-polygon rain-overlay" points="400,150 780,180 720,620 480,480"></polygon>
-          <!-- 烈日曝曬區 (Orange polygon) -->
-          <polygon id="heat-overlay" class="overlay-polygon heat-overlay" points="150,300 480,280 580,520 250,500"></polygon>
+        <g id="map-viewport" style="transform-origin: 500px 400px; transition: transform 0.1s ease-out;">
+          <!-- 半透明多邊形環境遮罩層 -->
+          <g id="overlays-group">
+            <!-- 突然暴雨區 (Blue polygon) -->
+            <polygon id="rain-overlay" class="overlay-polygon rain-overlay" points="400,150 780,180 720,620 480,480"></polygon>
+            <!-- 烈日曝曬區 (Orange polygon) -->
+            <polygon id="heat-overlay" class="overlay-polygon heat-overlay" points="150,300 480,280 580,520 250,500"></polygon>
+          </g>
+
+          <!-- 地圖環境區域標籤 -->
+          <text id="rain-label" class="overlay-label" x="600" y="240" font-family="'Montserrat', sans-serif" font-weight="900" font-size="14" fill="#00bdfd">🌧️ 暴雨無遮蓋區</text>
+          <text id="heat-label" class="overlay-label" x="300" y="380" font-family="'Montserrat', sans-serif" font-weight="900" font-size="14" fill="#ff8c00">☀️ 烈日曝曬區</text>
+
+          <!-- 基礎道路線段層 -->
+          <g id="edges-group"></g>
+
+          <!-- 路線渲染層 (先渲染的在下，後在頂) -->
+          <!-- 1. 原始最快路線 (紅虛線) -->
+          <path id="route-original" class="path-original" d=""></path>
+          
+          <!-- 2. 幸福導航路線 (發光綠線) -->
+          <path id="route-happy" class="path-happy" d=""></path>
+          
+          <!-- 3. 流光動畫點綴 (流動效果) -->
+          <path id="route-flow" class="path-happy path-flow" d="" stroke="rgba(255,255,255,0.7)" stroke-width="2" opacity="0.8"></path>
+
+          <!-- 地標節點層 -->
+          <g id="nodes-group"></g>
+
+          <!-- YouBike 站點專用標記層 -->
+          <g id="youbike-group"></g>
         </g>
-
-        <!-- 地圖環境區域標籤 -->
-        <text id="rain-label" class="overlay-label" x="600" y="240" font-family="'Montserrat', sans-serif" font-weight="900" font-size="14" fill="#00bdfd">🌧️ 暴雨無遮蓋區</text>
-        <text id="heat-label" class="overlay-label" x="300" y="380" font-family="'Montserrat', sans-serif" font-weight="900" font-size="14" fill="#ff8c00">☀️ 烈日曝曬區</text>
-
-        <!-- 基礎道路線段層 -->
-        <g id="edges-group"></g>
-
-        <!-- 路線渲染層 (先渲染的在下，後在頂) -->
-        <!-- 1. 原始最快路線 (紅虛線) -->
-        <path id="route-original" class="path-original" d=""></path>
-        
-        <!-- 2. 幸福導航路線 (發光綠線) -->
-        <path id="route-happy" class="path-happy" d=""></path>
-        
-        <!-- 3. 流光動畫點綴 (流動效果) -->
-        <path id="route-flow" class="path-happy path-flow" d="" stroke="rgba(255,255,255,0.7)" stroke-width="2" opacity="0.8"></path>
-
-        <!-- 地標節點層 -->
-        <g id="nodes-group"></g>
-
-        <!-- YouBike 站點專用標記層 -->
-        <g id="youbike-group"></g>
       </svg>
 
+      <!-- 地圖縮放控制按鈕 (Map Zoom Controls) -->
+      <div class="map-zoom-controls">
+        <button id="zoom-in-btn" class="zoom-btn" title="放大地圖 (鍵盤 +)">
+          <span class="material-symbols-outlined">add</span>
+        </button>
+        <div class="zoom-divider"></div>
+        <button id="zoom-out-btn" class="zoom-btn" title="縮小地圖 (鍵盤 -)">
+          <span class="material-symbols-outlined">remove</span>
+        </button>
+        <div class="zoom-divider"></div>
+        <button id="zoom-reset-btn" class="zoom-btn" title="重設地圖">
+          <span class="material-symbols-outlined">restart_alt</span>
+        </button>
+      </div>
+
       <!-- 雙路徑指標對比面板 (Dual-Path Metrics Comparison Panel) -->
-      <div id="comparison-card" class="map-floating-card" style="display: flex; flex-direction: column; gap: 8px; width: 330px; border-left: 4px solid var(--primary-color); padding: var(--spacing-sm) var(--spacing-md);">
-        <h4 style="font-family: var(--font-headline); font-size: 12px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; display: flex; align-items: center; gap: 6px;">
-          <span class="material-symbols-outlined text-[16px]">compare_arrows</span>
-          雙路徑指標對比 (Route Metrics)
-        </h4>
+      <div id="comparison-card" class="map-floating-card">
+        <!-- 面板標頭與最小化按鈕 -->
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+          <h4 style="font-family: var(--font-headline); font-size: 12px; font-weight: 700; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 6px;">
+            <span class="material-symbols-outlined" style="font-size: 16px;">compare_arrows</span>
+            雙路徑指標對比 (Route Metrics)
+          </h4>
+          <button id="minimize-comparison-btn" class="card-minimize-btn" title="最小化面板" style="background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 2px; color: var(--text-muted); transition: color 0.2s;">
+            <span class="material-symbols-outlined" style="font-size: 18px;">close_fullscreen</span>
+          </button>
+        </div>
         
         <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: left;">
           <thead>
@@ -235,6 +258,11 @@
             </tr>
           </tbody>
         </table>
+
+        <!-- 最小化後的圓圈內容 -->
+        <div class="minimized-content" title="點擊展開雙路徑指標對比">
+          <span class="material-symbols-outlined">compare_arrows</span>
+        </div>
       </div>
 
       <!-- 自訂 Toast 提示 (防呆用) -->

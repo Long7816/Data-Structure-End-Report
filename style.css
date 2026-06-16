@@ -583,11 +583,13 @@ body {
   stroke: #cbd5e1;
   stroke-width: 2.5px;
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform-box: fill-box;
+  transform-origin: center;
 }
 
 .node-group:hover .node-circle {
-  transform: scale(1.3);
   stroke: var(--primary-color);
+  stroke-width: 4px;
   fill: #e8fbf0;
 }
 
@@ -609,17 +611,15 @@ body {
 .node-origin .node-circle {
   fill: var(--secondary-color) !important;
   stroke: #fff !important;
-  stroke-width: 3px;
+  stroke-width: 4.5px !important;
   filter: drop-shadow(0 0 10px var(--secondary-glow));
-  transform: scale(1.2);
 }
 
 .node-destination .node-circle {
   fill: var(--primary-color) !important;
   stroke: #fff !important;
-  stroke-width: 3px;
+  stroke-width: 4.5px !important;
   filter: drop-shadow(0 0 10px var(--primary-glow));
-  transform: scale(1.2);
 }
 
 /* 節點文字 */
@@ -649,6 +649,8 @@ body {
   stroke: var(--primary-color);
   stroke-width: 1.5px;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.06));
+  transform-box: fill-box;
+  transform-origin: center;
 }
 
 .youbike-icon {
@@ -738,6 +740,113 @@ body {
   z-index: 30;
   border-left: 4px solid var(--primary-color);
   animation: card-slide-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+#comparison-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 330px;
+  border-left: 4px solid var(--primary-color);
+  padding: var(--spacing-sm) var(--spacing-md);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+#comparison-card .minimized-content {
+  display: none;
+}
+
+/* 最小化狀態 (變成圓圈) */
+#comparison-card.minimized {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  padding: 0;
+  cursor: pointer;
+  border: 2px solid var(--primary-color);
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  background: var(--surface-glass);
+  gap: 0;
+}
+
+#comparison-card.minimized:hover {
+  transform: scale(1.1);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 8px 25px rgba(46, 204, 113, 0.4);
+}
+
+#comparison-card.minimized .card-header,
+#comparison-card.minimized table {
+  display: none !important;
+}
+
+#comparison-card.minimized .minimized-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--primary-color);
+  animation: pulse-glow 2s infinite ease-in-out;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; filter: drop-shadow(0 0 4px var(--primary-glow)); }
+}
+
+.card-minimize-btn:hover {
+  color: var(--primary-color) !important;
+}
+
+/* 地圖縮放控制面板 */
+.map-zoom-controls {
+  position: absolute;
+  bottom: var(--spacing-lg);
+  left: var(--spacing-lg);
+  background: var(--surface-glass);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  z-index: 30;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  overflow: hidden;
+}
+
+.zoom-btn {
+  background: transparent;
+  border: none;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.zoom-btn:hover {
+  background: rgba(46, 204, 113, 0.1);
+  color: var(--primary-color);
+}
+
+.zoom-btn span {
+  font-size: 20px;
+}
+
+.zoom-divider {
+  height: 1px;
+  background: var(--border-light);
+  width: 80%;
+  margin: 0 auto;
 }
 
 @keyframes card-slide-in {
@@ -896,7 +1005,7 @@ body {
   fill: #df98fa !important;
   stroke: #83439e !important;
   filter: drop-shadow(0 0 8px rgba(223, 152, 250, 0.8)) !important;
-  transform: scale(1.25);
+  stroke-width: 4px !important;
 }
 
 .node-group.visited .node-circle,

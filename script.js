@@ -10,6 +10,13 @@ let currentModeId = "fastest";     // 預設最快
 let startNodeId = "youbike_xinsheng_4"; // 預設起點 (忠孝新生4號出口)
 let endNodeId = "building_science";     // 預設終點 (科研大樓)
 
+// 地圖縮放與平移拖曳狀態 (Zoom & Pan State)
+let zoomScale = 1.0;
+let panX = 0;
+let panY = 0;
+const MIN_SCALE = 0.5;
+const MAX_SCALE = 4.0;
+
 // 大眾運輸到站等待時間的 Hash Map (模擬即時轉乘等待分鐘數，用於 Dijkstra 動態處罰)
 let transitArrivalHashMap = {
   "bus_station_main_gate": { bus_green11: 1, bus_236: 4 },
@@ -639,6 +646,25 @@ function setupEventListeners() {
       }
     });
   });
+
+  // 8. 雙路徑指標對比最小化/展開事件
+  const compCard = document.getElementById("comparison-card");
+  const minimizeBtn = document.getElementById("minimize-comparison-btn");
+  if (compCard && minimizeBtn) {
+    minimizeBtn.addEventListener("click", (e) => {
+      e.stopPropagation(); // 阻止事件冒泡，防止觸發卡片點擊展開
+      compCard.classList.add("minimized");
+    });
+    
+    compCard.addEventListener("click", () => {
+      if (compCard.classList.contains("minimized")) {
+        compCard.classList.remove("minimized");
+      }
+    });
+  }
+
+  // 9. 地圖縮放與平移拖曳初始化
+  setupMapZoomAndPan();
 }
 
 function ensureHybridOptions() {
@@ -1613,9 +1639,106 @@ function showDetail(nodeId) {
     // -------------------------------------------------------------
 }
 
+// ==========================================
+// 10. 地圖縮放與拖曳平移功能實作 (Map Zoom & Pan)
+// ==========================================
+function setupMapZoomAndPan() {
+  const mapSvg = document.getElementById("map-svg");
+  const mapViewport = document.getElementById("map-viewport");
+  const zoomInBtn = document.getElementById("zoom-in-btn");
+  const zoomOutBtn = document.getElementById("zoom-out-btn");
+  const zoomResetBtn = document.getElementById("zoom-reset-btn");
 
+  if (!mapSvg || !mapViewport) return;
+
+  // 1. 更新 Viewport 渲染 transform
+  function updateViewportTransform() {
+    mapViewport.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomScale})`;
+  }
+
+  // 2. 縮放微調函式
+  function adjustZoom(amount) {
+    zoomScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, zoomScale + amount));
+    updateViewportTransform();
+  }
+
+  // 3. 綁定按鈕點擊事件
+  if (zoomInBtn) {
+    zoomInBtn.addEventListener("click", () => adjustZoom(0.25));
+  }
+  if (zoomOutBtn) {
+    zoomOutBtn.addEventListener("click", () => adjustZoom(-0.25));
+  }
+  if (zoomResetBtn) {
+    zoomResetBtn.addEventListener("click", () => {
+      zoomScale = 1.0;
+      panX = 0;
+      panY = 0;
+      updateViewportTransform();
+    });
+  }
+
+  // 4. 滾輪縮放 (向上放大，向下縮小)
+  mapSvg.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const zoomIn = e.deltaY < 0;
+    // 每次微調 0.1
+    adjustZoom(zoomIn ? 0.1 : -0.1);
+  }, { passive: false });
+
+  // 5. 鍵盤快速鍵 (+ 鍵或 = 鍵放大，- 鍵或 _ 鍵縮小)
+  window.addEventListener("keydown", (e) => {
+    // 避開在選單或輸入框輸入時觸發
+    if (document.activeElement.tagName === "SELECT" || document.activeElement.tagName === "INPUT") {
+      return;
+    }
+    if (e.key === "+" || e.key === "=") {
+      adjustZoom(0.1);
+    } else if (e.key === "-" || e.key === "_") {
+      adjustZoom(-0.1);
+    }
+  });
+
+  // 6. 拖曳平移 (Pan) 實作
+  let isPanning = false;
+  let startX = 0;
+  let startY = 0;
+
+  mapSvg.addEventListener("mousedown", (e) => {
+    // 僅支援左鍵拖曳
+    if (e.button !== 0) return;
+    
+    // 如果點擊到節點、YouBike標記或控制按鈕，則不啟動拖曳
+    if (e.target.closest(".node-group") || e.target.closest(".youbike-marker") || e.target.closest("button") || e.target.closest("select")) {
+      return;
+    }
+    
+    isPanning = true;
+    startX = e.clientX - panX;
+    startY = e.clientY - panY;
+    mapSvg.style.cursor = "grabbing";
+    // 暫停 transition，使拖曳平移無延遲，感覺更即時
+    mapViewport.style.transition = "none";
+  });
+
+  window.addEventListener("mousemove", (e) => {
+    if (!isPanning) return;
+    panX = e.clientX - startX;
+    panY = e.clientY - startY;
+    updateViewportTransform();
+  });
+
+  window.addEventListener("mouseup", () => {
+    if (isPanning) {
+      isPanning = false;
+      mapSvg.style.cursor = "default";
+      // 恢復 transition
+      mapViewport.style.transition = "transform 0.1s ease-out";
+    }
+  });
+}
 
 // ==========================================
-// 10. 頁面載入完成啟動
+// 11. 頁面載入完成啟動
 // ==========================================
 window.addEventListener("DOMContentLoaded", initSystem);
