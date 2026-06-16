@@ -1,5 +1,5 @@
 /**
- * 幸福通勤導航系統 - 核心邏輯與演算法實作
+ * 智行北科 (OmniNTUT) - 核心邏輯與演算法實作
  */
 
 // ==========================================
@@ -328,7 +328,7 @@ function getEdgeBetween(n1, n2) {
 // 4. 複合路徑規劃：YouBike 臨界警告與動態繞道
 // ==========================================
 /**
- * YouBike 轉乘/騎車幸福導航規劃 (包含無車可借、滿位無法還之繞道決策)
+ * YouBike 轉乘/騎車智行導航規劃 (包含無車可借、滿位無法還之繞道決策)
  */
 function planYouBikeRoute(start, target) {
   if (typeof CAMPUS_NODES === 'undefined' || typeof CAMPUS_EDGES === 'undefined') {
@@ -1095,7 +1095,7 @@ function calculateAndRenderRoutes() {
     edgeWeightHashMap = tempBackup;
   }
 
-  // 3. 規劃路線 B：優化後的幸福路線 (包含天氣、路面、YouBike吃緊狀況的 Dijkstra 運算)
+  // 3. 規劃路線 B：優化後的智行路線 (包含天氣、路面、YouBike吃緊狀況的 Dijkstra 運算)
   let happyResult;
   if (currentModeId === "bike") {
     happyResult = planYouBikeRoute(startNodeId, endNodeId);
@@ -1120,7 +1120,7 @@ function calculateAndRenderRoutes() {
       pathOriginal.setAttribute("opacity", "0");
     }
 
-    // 繪製幸福路徑 (螢光綠粗發光線)
+    // 繪製智行路徑 (螢光綠粗發光線)
     if (happyPointsStr) {
       pathHappy.setAttribute("d", happyPointsStr);
       pathHappy.setAttribute("opacity", "1");
