@@ -954,6 +954,39 @@ function handleNodeClick(nodeId) {
 }
 
 /**
+ * 根據節點屬性動態取得本地相片路徑 (支援周邊地標子資料夾與特定副檔名映射)
+ */
+function getPhotoPath(node) {
+  if (!node) return null;
+  const name = node.name;
+  
+  // 針對特殊副檔名進行對齊
+  if (name === "先鋒大樓") {
+    return "./photos/台北科技大學/先鋒大樓.jfif";
+  }
+  if (name === "紅樓") {
+    return "./photos/台北科技大學/紅樓.JPG";
+  }
+  
+  // 針對周邊地標路徑進行對齊
+  if (name === "綠光庭園" || name === "光華商場" || name === "三創生活園區") {
+    return `./photos/周邊/${name}.jpg`;
+  }
+  
+  // 預設北科大校園內大樓
+  const defaultCampusBuildings = [
+    "科研大樓", "第一教學大樓", "第二教學大樓", "第三教學大樓", "第四教學大樓",
+    "圖書館", "北科宿舍", "共同科館", "行政大樓", "綜合大樓", "中正館", "億光大樓"
+  ];
+  
+  if (defaultCampusBuildings.includes(name)) {
+    return `./photos/台北科技大學/${name}.jpg`;
+  }
+  
+  return null;
+}
+
+/**
  * 動態開啟彈出視窗並加載對應的北科大圖片與大樓描述 (全地標支援版)
  */
 function openLandmarkModal(nodeId) {
@@ -972,8 +1005,9 @@ function openLandmarkModal(nodeId) {
 
   // 2. 設定圖片
   if (imageEl) {
-    if (node.photo) {
-      imageEl.src = node.photo;
+    const photoPath = node.photo || getPhotoPath(node);
+    if (photoPath) {
+      imageEl.src = photoPath;
       imageEl.style.display = "block";
       // 圖片加載失敗時隱藏
       imageEl.onerror = function() {
@@ -1613,14 +1647,15 @@ function showDetail(nodeId) {
     }
 
     // 2. 檢查該節點在 campusGraph.js 中是否有設定 photo 欄位
-    if (node.photo) {
+    const photoPath = node.photo || getPhotoPath(node);
+    if (photoPath) {
         // 建立圖片的容器與 img 標籤
         const photoContainer = document.createElement('div');
         photoContainer.className = 'modal-photo-container';
         
         // 使用 onerror 防呆：如果照片不存在，就自動隱藏，不留破圖
         photoContainer.innerHTML = `
-            <img src="${node.photo}" alt="${node.name}" class="modal-landmark-photo" onerror="this.parentNode.style.display='none';">
+            <img src="${photoPath}" alt="${node.name}" class="modal-landmark-photo" onerror="this.parentNode.style.display='none';">
         `;
 
         // 3. 找到您的資訊欄內容容器（請確認您的 ID 是否為 'modal-content' 或 'detail-info'）
