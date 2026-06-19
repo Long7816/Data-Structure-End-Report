@@ -1,0 +1,1441 @@
+/* ==========================================================================
+   智行北科 (OmniNTUT) - 核心樣式表 (Vanilla CSS)
+   採用 Luminous Kinetic 科技感深色模式與磨砂玻璃質感 (Glassmorphism)
+   ========================================================================== */
+
+/* 匯入 Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@400;600;800;900&family=Fira+Code:wght@400;500&display=swap');
+
+/* 全域變數與設計系統 Token */
+:root {
+  /* 顏色 Token */
+  --bg-color: #f8f9fa;              /* 淺灰白色背景 */
+  --surface-color: #ffffff;         /* 面板背景底色 */
+  --surface-glass: rgba(255, 255, 255, 0.85); /* 磨砂玻璃背景色 */
+  --border-light: rgba(0, 0, 0, 0.05); /* 細灰邊框 */
+  
+  --primary-color: #2ecc71;         /* 螢光綠 (最快/幸福路徑) */
+  --primary-glow: rgba(46, 204, 113, 0.25);
+  
+  --secondary-color: #3498db;       /* 天藍色 (輔助路線/資訊) */
+  --secondary-glow: rgba(52, 152, 219, 0.25);
+  
+  --accent-color: #f1c40f;          /* 亮橘色 (高溫/警示) */
+  --accent-glow: rgba(241, 196, 15, 0.25);
+
+  --error-color: #e74c3c;           /* 亮紅色 (重罰/危險) */
+  --error-glow: rgba(231, 76, 60, 0.25);
+
+  --purple-color: #9b59b6;          /* 紫色 (優先佇列/搜尋狀態) */
+  --purple-glow: rgba(155, 89, 182, 0.25);
+  
+  --text-primary: #191c1d;          /* 主文字 */
+  --text-secondary: #3d4a3e;        /* 次文字 */
+  --text-muted: #6c7b6d;            /* 隱藏/說明文字 */
+  --text-dark: #ffffff;             /* 對比字 (用在綠色背景上) */
+
+  /* 字型 */
+  --font-headline: 'Montserrat', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'Fira Code', monospace;
+
+  /* 圓角 */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  /* 間距 */
+  --spacing-xs: 4px;
+  --spacing-sm: 12px;
+  --spacing-md: 20px;
+  --spacing-lg: 32px;
+}
+
+/* 基礎重設 */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.5;
+}
+
+/* 頂部導覽列 (簡報看板用) */
+.header-bar {
+  height: 70px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 var(--spacing-lg);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-light);
+  z-index: 50;
+  position: relative;
+}
+
+.brand {
+  font-family: var(--font-headline);
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-sub {
+  font-size: 11px;
+  font-family: var(--font-body);
+  font-weight: 500;
+  color: var(--text-muted);
+  border: 1px solid var(--text-muted);
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  margin-left: 8px;
+}
+
+.nav-actions {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+}
+
+.nav-item {
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-item:hover, .nav-item.active {
+  color: var(--primary-color);
+  text-shadow: 0 0 8px var(--primary-glow);
+}
+
+/* 主內容區域佈局 */
+.main-container {
+  flex: 1;
+  display: flex;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 左側控制面板 */
+.control-sidebar {
+  width: 420px;
+  height: 100%;
+  background: var(--surface-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  z-index: 40;
+  box-shadow: 5px 0 20px rgba(0, 0, 0, 0.03);
+  transition: transform 0.3s ease;
+}
+
+.sidebar-scrollable {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-md);
+}
+
+/* 隱藏滾動條 */
+.sidebar-scrollable::-webkit-scrollbar {
+  width: 4px;
+}
+.sidebar-scrollable::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+/* 卡片與容器樣式 */
+.section-title {
+  font-family: var(--font-headline);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-sm);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-title span {
+  font-size: 18px;
+  color: var(--primary-color);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:focus-within {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 15px rgba(46, 204, 113, 0.15);
+}
+
+/* 輸入框與下拉選單 */
+.input-group {
+  margin-bottom: var(--spacing-sm);
+  position: relative;
+}
+
+.input-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.select-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.select-input {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  padding: 10px 14px;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.select-input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 10px rgba(46, 204, 113, 0.1);
+}
+
+.select-wrapper::after {
+  content: 'expand_more';
+  font-family: 'Material Symbols Outlined';
+  position: absolute;
+  right: 14px;
+  pointer-events: none;
+  color: var(--text-secondary);
+  font-size: 20px;
+}
+
+/* 交換按鈕 */
+.swap-btn-container {
+  display: flex;
+  justify-content: center;
+  margin: -10px 0 10px 0;
+  position: relative;
+  z-index: 10;
+}
+
+.swap-btn {
+  background: var(--surface-color);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-full);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.3s ease;
+}
+
+.swap-btn:hover {
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 8px var(--primary-glow);
+}
+
+/* 按鈕樣式 */
+.btn-primary {
+  width: 100%;
+  background: var(--primary-color);
+  color: var(--text-dark);
+  font-family: var(--font-headline);
+  font-size: 14px;
+  font-weight: 800;
+  padding: 12px;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 15px var(--primary-glow);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+}
+
+.btn-primary:hover {
+  background: #a2ff8d;
+  box-shadow: 0 6px 20px rgba(121, 255, 91, 0.5);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(1px);
+}
+
+/* 情境選擇網格 */
+.scenario-grid {
+  display: grid;
+  grid-template-cols: repeat(2, 1fr);
+  gap: var(--spacing-sm);
+}
+
+.scenario-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.01);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.scenario-card:hover {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: var(--text-secondary);
+}
+
+.scenario-card.active {
+  background: rgba(46, 204, 113, 0.06);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 10px rgba(46, 204, 113, 0.1);
+}
+
+.scenario-card.active[data-scenario="rain"] {
+  background: rgba(52, 152, 219, 0.06);
+  border-color: var(--secondary-color);
+  box-shadow: 0 0 10px rgba(52, 152, 219, 0.1);
+}
+
+.scenario-card.active[data-scenario="heat"] {
+  background: rgba(241, 196, 15, 0.06);
+  border-color: var(--accent-color);
+  box-shadow: 0 0 10px rgba(241, 196, 15, 0.1);
+}
+
+.scenario-card.active[data-scenario="pollution"] {
+  background: rgba(231, 76, 60, 0.06);
+  border-color: var(--error-color);
+  box-shadow: 0 0 10px rgba(231, 76, 60, 0.1);
+}
+
+.scenario-emoji {
+  font-size: 20px;
+}
+
+.scenario-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.scenario-desc {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+/* 偏好模式切換 (Tabs) */
+.mode-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mode-tab {
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: var(--radius-full);
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+}
+
+.mode-tab:hover {
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+}
+
+.mode-tab.active {
+  background: rgba(46, 204, 113, 0.1);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  box-shadow: inset 0 0 8px rgba(46, 204, 113, 0.15);
+}
+
+/* 演算法監控面板 */
+.monitor-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.monitor-row:last-child {
+  border-bottom: none;
+}
+
+.monitor-value {
+  color: var(--primary-color);
+  font-weight: bold;
+}
+
+.monitor-bar {
+  height: 3px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-full);
+  margin-top: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.monitor-bar-fill {
+  height: 100%;
+  width: 75%;
+  background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
+  animation: bar-pulse 2s infinite ease-in-out;
+}
+
+@keyframes bar-pulse {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; filter: brightness(1.2); }
+}
+
+/* 右側地圖區域 */
+.map-canvas {
+  flex: 1;
+  height: 100%;
+  position: relative;
+  background-color: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: background 0.6s ease;
+}
+
+/* Dynamic ambient backgrounds based on scenario */
+.map-canvas.normal {
+  background: radial-gradient(circle at top right, rgba(52, 152, 219, 0.06), transparent 50%),
+              radial-gradient(circle at bottom left, rgba(46, 204, 113, 0.04), transparent 50%);
+}
+.map-canvas.heat {
+  background: radial-gradient(circle at center, rgba(241, 196, 15, 0.07), transparent 70%);
+}
+.map-canvas.rain {
+  background: radial-gradient(circle at center, rgba(52, 152, 219, 0.07), transparent 70%);
+}
+.map-canvas.pollution {
+  background: radial-gradient(circle at center, rgba(108, 123, 109, 0.07), transparent 70%);
+}
+.map-canvas.youbike_clog {
+  background: radial-gradient(circle at center, rgba(155, 89, 182, 0.05), transparent 70%);
+}
+
+/* 網格網線背景 */
+.map-grid {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(circle at 2px 2px, rgba(0, 0, 0, 0.04) 1.5px, transparent 0),
+    linear-gradient(rgba(0, 0, 0, 0.005) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.005) 1px, transparent 1px);
+  background-size: 30px 30px, 150px 150px, 150px 150px;
+  pointer-events: none;
+}
+
+/* SVG 地圖物件 */
+.map-svg {
+  width: 100%;
+  height: 100%;
+  max-width: 1000px;
+  max-height: 800px;
+  position: relative;
+  z-index: 10;
+}
+
+/* 地圖實體：道路 */
+.edge-line {
+  stroke: #e2e8f0;
+  stroke-width: 4px;
+  stroke-linecap: round;
+  transition: all 0.3s ease;
+}
+
+.edge-line.active-segment {
+  stroke: #cbd5e1;
+}
+
+/* 遮雨與遮蔭特徵點標記 (點綴用) */
+.edge-roof-indicator {
+  stroke: var(--secondary-color);
+  stroke-width: 1px;
+  stroke-dasharray: 4, 4;
+  opacity: 0.4;
+}
+
+.edge-shade-indicator {
+  stroke: var(--primary-color);
+  stroke-width: 1px;
+  stroke-dasharray: 2, 6;
+  opacity: 0.3;
+}
+
+/* 原路徑 (紅/橘虛線) */
+.path-original {
+  stroke: var(--error-color);
+  stroke-width: 4px;
+  stroke-dasharray: 6, 8;
+  fill: none;
+  filter: drop-shadow(0 0 3px rgba(255, 180, 171, 0.3));
+  transition: d 0.5s ease, opacity 0.3s ease;
+}
+
+/* 幸福優化路徑 (螢光綠發光實線) */
+.path-happy {
+  stroke: var(--primary-color);
+  stroke-width: 6px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  filter: drop-shadow(0 0 8px var(--primary-glow));
+  transition: d 0.5s ease, opacity 0.3s ease;
+}
+
+/* 流光動畫 */
+.path-flow {
+  stroke-dasharray: 12, 24;
+  animation: path-flow-anim 30s linear infinite;
+}
+
+@keyframes path-flow-anim {
+  to {
+    stroke-dashoffset: -1000;
+  }
+}
+
+/* 節點 */
+.node-group {
+  cursor: pointer;
+}
+
+.node-circle {
+  fill: #ffffff;
+  stroke: #cbd5e1;
+  stroke-width: 2.5px;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.node-group:hover .node-circle {
+  stroke: var(--primary-color);
+  stroke-width: 4px;
+  fill: #e8fbf0;
+}
+
+/* 特殊節點樣式 */
+.node-transit .node-circle {
+  stroke: var(--secondary-color);
+  fill: #f0f8ff;
+}
+.node-dorm .node-circle {
+  stroke: var(--purple-color);
+  fill: #faf5ff;
+}
+.node-building .node-circle {
+  stroke: #f1c40f;
+  fill: #fffdf0;
+}
+
+/* 起終點動態高亮 */
+.node-origin .node-circle {
+  fill: var(--secondary-color) !important;
+  stroke: #fff !important;
+  stroke-width: 4.5px !important;
+  filter: drop-shadow(0 0 10px var(--secondary-glow));
+}
+
+.node-destination .node-circle {
+  fill: var(--primary-color) !important;
+  stroke: #fff !important;
+  stroke-width: 4.5px !important;
+  filter: drop-shadow(0 0 10px var(--primary-glow));
+}
+
+/* 節點文字 */
+.node-label {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--text-secondary);
+  text-anchor: middle;
+  pointer-events: none;
+  user-select: none;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.8));
+}
+
+.node-group:hover .node-label {
+  fill: #fff;
+  font-size: 12px;
+}
+
+/* YouBike 站點標記 */
+.youbike-marker {
+  transition: all 0.3s ease;
+}
+
+.youbike-bg {
+  fill: rgba(255, 255, 255, 0.95);
+  stroke: var(--primary-color);
+  stroke-width: 1.5px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.06));
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.youbike-icon {
+  font-family: 'Material Symbols Outlined';
+  font-size: 15px;
+  fill: var(--primary-color);
+  text-anchor: middle;
+  dominant-baseline: middle;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* YouBike 警告狀態 */
+.youbike-marker.warning .youbike-bg {
+  stroke: var(--error-color);
+  animation: youbike-pulse-red 2s infinite ease-in-out;
+}
+
+.youbike-marker.warning .youbike-icon {
+  fill: var(--error-color);
+}
+
+@keyframes youbike-pulse-red {
+  0%, 100% {
+    filter: drop-shadow(0 0 2px var(--error-glow));
+  }
+  50% {
+    filter: drop-shadow(0 0 12px rgba(255, 180, 171, 0.8));
+    stroke-width: 2.5px;
+  }
+}
+
+/* 天氣/環境影響區多邊形 overlay */
+.overlay-polygon {
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  pointer-events: none;
+}
+
+.overlay-polygon.active {
+  opacity: 1;
+}
+
+.rain-overlay {
+  fill: rgba(0, 189, 253, 0.08);
+  stroke: rgba(0, 189, 253, 0.25);
+  stroke-width: 2px;
+  stroke-dasharray: 4, 4;
+}
+
+.heat-overlay {
+  fill: rgba(255, 140, 0, 0.08);
+  stroke: rgba(255, 140, 0, 0.25);
+  stroke-width: 2px;
+}
+
+.overlay-label {
+  font-family: var(--font-headline);
+  font-size: 12px;
+  font-weight: 800;
+  fill: var(--text-secondary);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+}
+
+.overlay-label.active {
+  opacity: 0.6;
+}
+
+/* 地圖浮動統計數據卡 */
+.map-floating-card {
+  position: absolute;
+  bottom: var(--spacing-lg);
+  right: var(--spacing-lg);
+  background: var(--surface-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  z-index: 30;
+  border-left: 4px solid var(--primary-color);
+  animation: card-slide-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+#comparison-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 330px;
+  border-left: 4px solid var(--primary-color);
+  padding: var(--spacing-sm) var(--spacing-md);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+#comparison-card .minimized-content {
+  display: none;
+}
+
+/* 最小化狀態 (變成圓圈) */
+#comparison-card.minimized {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  padding: 0;
+  cursor: pointer;
+  border: 2px solid var(--primary-color);
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  background: var(--surface-glass);
+  gap: 0;
+}
+
+#comparison-card.minimized:hover {
+  transform: scale(1.1);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 8px 25px rgba(46, 204, 113, 0.4);
+}
+
+#comparison-card.minimized .card-header,
+#comparison-card.minimized table {
+  display: none !important;
+}
+
+#comparison-card.minimized .minimized-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--primary-color);
+  animation: pulse-glow 2s infinite ease-in-out;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; filter: drop-shadow(0 0 4px var(--primary-glow)); }
+}
+
+.card-minimize-btn:hover {
+  color: var(--primary-color) !important;
+}
+
+/* 地圖縮放控制面板 */
+.map-zoom-controls {
+  position: absolute;
+  bottom: var(--spacing-lg);
+  left: var(--spacing-lg);
+  background: var(--surface-glass);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  z-index: 30;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  overflow: hidden;
+}
+
+.zoom-btn {
+  background: transparent;
+  border: none;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.zoom-btn:hover {
+  background: rgba(46, 204, 113, 0.1);
+  color: var(--primary-color);
+}
+
+.zoom-btn span {
+  font-size: 20px;
+}
+
+.zoom-divider {
+  height: 1px;
+  background: var(--border-light);
+  width: 80%;
+  margin: 0 auto;
+}
+
+@keyframes card-slide-in {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.floating-stat-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.floating-stat-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.floating-stat-value {
+  font-family: var(--font-headline);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--primary-color);
+  line-height: 1.2;
+}
+
+.floating-divider {
+  width: 1px;
+  height: 35px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.floating-icon-stats {
+  display: flex;
+  gap: var(--spacing-md);
+}
+
+.icon-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.icon-stat-item span.icon {
+  font-family: 'Material Symbols Outlined';
+  font-size: 20px;
+  color: var(--text-secondary);
+}
+
+.icon-stat-item.active[data-type="sun"] span.icon {
+  color: var(--accent-color);
+  text-shadow: 0 0 5px var(--accent-glow);
+}
+
+.icon-stat-item.active[data-type="rain"] span.icon {
+  color: var(--secondary-color);
+  text-shadow: 0 0 5px var(--secondary-glow);
+}
+
+.icon-stat-text {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.icon-stat-sub {
+  font-size: 9px;
+  color: var(--text-muted);
+}
+
+/* 自訂彈出式防呆提示 */
+.alert-toast {
+  position: absolute;
+  top: 90px;
+  right: var(--spacing-lg);
+  background: rgba(255, 180, 171, 0.15);
+  border: 1px solid var(--error-color);
+  color: var(--error-color);
+  backdrop-filter: blur(10px);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 100;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  transform: translateX(120%);
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.alert-toast.show {
+  transform: translateX(0);
+}
+
+.alert-toast span.icon {
+  font-family: 'Material Symbols Outlined';
+  font-size: 18px;
+}
+
+/* 簡報專屬：原始最快 vs 優化路線顏色標籤指示 */
+.route-legend {
+  position: absolute;
+  top: var(--spacing-lg);
+  left: var(--spacing-lg);
+  background: var(--surface-glass);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.legend-color-line {
+  width: 24px;
+  height: 4px;
+  border-radius: var(--radius-full);
+}
+
+.legend-color-line.original {
+  background: var(--error-color);
+  box-shadow: 0 0 4px var(--error-glow);
+  border: 1px dashed rgba(255,255,255,0.2);
+}
+
+.legend-color-line.happy {
+  background: var(--primary-color);
+  box-shadow: 0 0 6px var(--primary-glow);
+}
+
+/* Step-Run Pathfinding Visualizer Search States */
+.node-group.visiting .node-circle,
+.youbike-marker.visiting .youbike-bg {
+  fill: #df98fa !important;
+  stroke: #83439e !important;
+  filter: drop-shadow(0 0 8px rgba(223, 152, 250, 0.8)) !important;
+  stroke-width: 4px !important;
+}
+
+.node-group.visited .node-circle,
+.youbike-marker.visited .youbike-bg {
+  fill: #cce5ff !important;
+  stroke: #3498db !important;
+  opacity: 0.8;
+}
+
+.edge-line.exploring {
+  stroke: #3498db !important;
+  stroke-dasharray: 4, 4;
+  animation: edge-dash-anim 1s linear infinite;
+}
+
+@keyframes edge-dash-anim {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+
+/* ==========================================================================
+   多分頁切換與 UI 升級樣式 (無大眾運輸看板)
+   ========================================================================== */
+
+/* 頂部頁籤按鈕樣式 */
+.nav-tab {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  outline: none;
+}
+
+.nav-tab:hover {
+  color: var(--primary-color);
+  background: rgba(46, 204, 113, 0.05);
+}
+
+.nav-tab.active {
+  color: var(--primary-color);
+  background: rgba(46, 204, 113, 0.1);
+  box-shadow: inset 0 0 4px rgba(46, 204, 113, 0.05);
+}
+
+/* 分頁顯示控制 */
+.page-container {
+  display: none;
+  width: 100%;
+  height: 100%;
+}
+
+.page-container.active-page {
+  display: flex;
+}
+
+/* 浮動天氣選擇列 (Floating pills) */
+.weather-floating-bar {
+  position: absolute;
+  top: var(--spacing-md);
+  right: var(--spacing-md);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-full);
+  padding: 5px;
+  display: flex;
+  gap: 4px;
+  z-index: 30;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.weather-pill {
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-full);
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.weather-pill:hover {
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--text-primary);
+}
+
+/* 針對各天氣情境的 active 狀態樣式 (Wow factor配色) */
+.weather-pill.active[data-scenario="normal"] {
+  background: var(--primary-color);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(46, 204, 113, 0.25);
+}
+
+.weather-pill.active[data-scenario="heat"] {
+  background: var(--accent-color);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(241, 196, 15, 0.25);
+}
+
+.weather-pill.active[data-scenario="rain"] {
+  background: var(--secondary-color);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(52, 152, 219, 0.25);
+}
+
+.weather-pill.active[data-scenario="youbike_clog"] {
+  background: var(--error-color);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(231, 76, 60, 0.25);
+}
+
+/* 演算法觀測後台專屬樣式 */
+#backstage-page {
+  background-color: #fcfdfe;
+}
+
+#backstage-page .glass-card {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
+}
+
+.badge {
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   地標節點點擊彈出視窗 (Modal) 客製樣式
+   ========================================================================== */
+.landmark-modal {
+  display: none; /* 預設隱藏 */
+  position: fixed;
+  z-index: 999; /* 確保在最頂層 */
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6); /* 半透明科技黑背景 */
+  backdrop-filter: blur(4px); /* 磨砂玻璃濾鏡 */
+  justify-content: center;
+  align-items: center;
+  transition: opacity 0.3s ease;
+}
+
+/* 顯示時切換的 class */
+.landmark-modal.show {
+  display: flex;
+}
+
+.landmark-modal-content {
+  background: var(--surface-color, #ffffff);
+  border: 1px solid var(--border-light, rgba(0, 0, 0, 0.1));
+  border-radius: var(--radius-md, 12px);
+  width: 90%;
+  max-width: 400px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  position: relative;
+  animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--text-muted, #999);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.modal-close-btn:hover {
+  color: var(--error-color, #ff4d4f);
+}
+
+.modal-title {
+  font-family: var(--font-headline, sans-serif);
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  color: var(--purple-color, #2ecc71); /* 保持主題色一致 */
+  border-bottom: 2px solid var(--border-light, #f0f0f0);
+  padding-bottom: 8px;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover; /* 保持比例裁剪 */
+  border-radius: var(--radius-sm, 6px);
+  background-color: #1e1e1e;
+  border: 1px solid var(--border-light, rgba(0,0,0,0.05));
+}
+
+.modal-desc {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.modal-description-text {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  text-align: justify;
+}
+
+.modal-extra-info {
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: var(--radius-sm, 8px);
+  padding: 12px;
+  margin-top: 8px;
+  transition: all 0.3s ease;
+}
+
+.youbike-status-info {
+  border-left: 3px solid var(--primary-color);
+  background: rgba(46, 204, 113, 0.03);
+}
+
+.youbike-status-info.warning-status {
+  border-left: 3px solid var(--error-color);
+  background: rgba(231, 76, 60, 0.03);
+}
+
+.modal-extra-info .info-title {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.modal-extra-info .info-title span.material-symbols-outlined {
+  color: inherit;
+}
+
+.youbike-status-info .info-title {
+  color: var(--primary-color);
+}
+
+.youbike-status-info.warning-status .info-title {
+  color: var(--error-color);
+}
+
+.modal-extra-info .info-grid {
+  display: flex;
+  justify-content: space-between;
+  margin: 8px 0;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 6px;
+  padding: 8px 0;
+  border: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+.modal-extra-info .info-item {
+  flex: 1;
+  text-align: center;
+}
+
+.modal-extra-info .info-item:not(:last-child) {
+  border-right: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.modal-extra-info .info-label {
+  display: block;
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.modal-extra-info .info-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.modal-extra-info .info-value.low-count {
+  color: var(--error-color);
+  animation: text-pulse-red 2s infinite ease-in-out;
+}
+
+@keyframes text-pulse-red {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.modal-extra-info .info-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--error-color);
+  background: rgba(231, 76, 60, 0.06);
+  padding: 8px;
+  border-radius: 6px;
+  margin-top: 6px;
+  line-height: 1.4;
+  border: 1px solid rgba(231, 76, 60, 0.1);
+}
+
+.modal-extra-info .info-success {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--primary-color);
+  background: rgba(46, 204, 113, 0.06);
+  padding: 8px;
+  border-radius: 6px;
+  margin-top: 6px;
+  line-height: 1.4;
+  border: 1px solid rgba(46, 204, 113, 0.1);
+}
+
+/* ==========================================================================
+   🎯 徹底修復：將即時 Hash Map 觀測框穩定固定在畫面右側，防止滑鼠閃動
+   ========================================================================== */
+#hash-map-inspector {
+  position: absolute !important;   /* 強制改為相對於右側面板固定 */
+  top: auto !important;           /* 取消滑鼠 Y 軸動態干擾 */
+  left: auto !important;          /* 取消滑鼠 X 軸動態干擾 */
+  
+  /* 🌟 最關鍵的一行：讓滑鼠事件直接穿透它！ */
+  /* 這樣即使它不小心碰到滑鼠，滑鼠也像穿過幽靈一樣，能 100% 精準點到地標圓點 */
+  pointer-events: none !important; 
+  
+  /* 保持你原本極具質感的科技暗色調 */
+  background: #1e1e1e !important;
+  border: 1px solid rgba(46, 204, 113, 0.2) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* 確保觀測框裡面的程式碼字體與排版依然正常 */
+#hash-map-inspector pre {
+  margin: 0;
+  pointer-events: none; /* 內部元件同步穿透 */
+}
+
+/* ==========================================================================
+   🔥 終極大絕招：彻底修復滑鼠移至地標會頻閃、點不到地標的問題
+   ========================================================================== */
+
+/* 1. 讓所有可能跟隨滑鼠的動態觀測提示框、Tooltip、JSON 浮動框，全部變成「幽靈狀態」 */
+/* 這樣滑鼠在點擊地標圓點時，會 100% 直接穿透過去，絕對不會觸發「離開節點」的誤判，地標點就會極度穩定！ */
+#node-tooltip, 
+.node-tooltip, 
+#edge-tooltip, 
+.edge-tooltip, 
+.live-inspector-floating, 
+[id*="tooltip"], 
+[class*="tooltip"] {
+  pointer-events: none !important; /* 🔥 最關鍵：強制滑鼠事件直接穿透！ */
+}
+
+/* 2. 如果你的 Hash Map 觀測框（#hash-map-inspector）不小心被 JS 寫入了動態的 top, left 導致跟著滑鼠跑： */
+/* 下面這段會用 !important 強制把它釘死在網頁畫面的固定角落（或固定在右側原本的面板裡），不再跟隨滑鼠晃動 */
+#hash-map-inspector {
+  position: relative !important;   /* 讓它乖乖待在原本右側面板的 Flex 佈局裡 */
+  top: auto !important;            /* 強制覆蓋 JS 的 X 軸位移 */
+  left: auto !important;           /* 強制覆蓋 JS 的 Y 軸位移 */
+  transform: none !important;      /* 防止 JS 用 transform 挪動它 */
+  pointer-events: auto !important; /* 確保在右側面板裡時可以正常的捲動看內文 */
+}
+
+/* 3. 確保地圖上的 SVG 圓點地標，在滑鼠移上去時有最高的點擊權限，且游標會變成手指形狀 */
+.node-group, 
+circle, 
+.youbike-marker, 
+g[data-id] {
+  cursor: pointer !important;
+  pointer-events: auto !important; /* 強制提高地標的滑鼠感應優先級 */
+}
+
+/* ==========================================================================
+   新增：地標彈出視窗圖片樣式
+   ========================================================================== */
+
+.modal-photo-container {
+  width: 100%;
+  max-height: 200px; /* 控制圖片最大高度，避免撐爆 Modal */
+  overflow: hidden;
+  border-radius: var(--radius-sm, 8px);
+  margin-bottom: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #111; /* 圖片載入前的底色 */
+}
+
+.modal-landmark-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* 關鍵：保護圖片比例不變形，自動裁切填滿 */
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+/* 滑鼠懸停在圖片上時的輕微放大效果，增加科技互動感 */
+.modal-photo-container:hover .modal-landmark-photo {
+  transform: scale(1.03);
+}
